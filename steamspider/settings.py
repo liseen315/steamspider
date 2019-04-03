@@ -18,7 +18,7 @@ NEWSPIDER_MODULE = 'steamspider.spiders'
 # USER_AGENT = 'steamspider (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # CONCURRENT_REQUESTS = 32
@@ -26,7 +26,7 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.5
+DOWNLOAD_DELAY = 5
 RANDOMIZE_DOWNLOAD_DELAY = True
 # The download delay setting will honor only one of:
 CONCURRENT_REQUESTS_PER_DOMAIN = 16
@@ -39,10 +39,10 @@ CONCURRENT_REQUESTS_PER_IP = 16
 # TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-# DEFAULT_REQUEST_HEADERS = {
-#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#   'Accept-Language': 'en',
-# }
+DEFAULT_REQUEST_HEADERS = {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en',
+}
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
@@ -53,9 +53,9 @@ CONCURRENT_REQUESTS_PER_IP = 16
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    #'steamspider.middlewares.SteamspiderDownloaderMiddleware': 543,
-    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,  # 关闭默认方法
-    'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,  # 开启
+    # 'steamspider.middlewares.SteamspiderDownloaderMiddleware': 543,
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+    'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
 
 }
 
@@ -67,9 +67,10 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-# ITEM_PIPELINES = {
-#    'steamspider.pipelines.SteamspiderPipeline': 300,
-# }
+ITEM_PIPELINES = {
+    # 'scrapy_redis.pipelines.RedisPipeline': 300
+    'steamspider.pipelines.MySQLStorePipeline': 300
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -91,3 +92,16 @@ DOWNLOADER_MIDDLEWARES = {
 # HTTPCACHE_DIR = 'httpcache'
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+
+SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.PriorityQueue'
+
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+
+REDIS_URL = 'redis://:Liseen315song@127.0.0.1:6379'
+
+SCHEDULER_PERSIST = True
+
+SCHEDULER_FLUSH_ON_START = True
