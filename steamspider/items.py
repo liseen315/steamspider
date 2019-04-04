@@ -28,11 +28,11 @@ class AppDetailItem(TopSellersItem):
 class TopSellers(Model):
     app_id = CharField(verbose_name='app唯一id', null=False, unique=True)
     name = CharField(verbose_name='app名称', null=False)
-    # thumb_url = CharField(verbose_name='封面url', null=False)
-    # released = CharField(verbose_name='发布日期', null=False)
-    # discount = CharField(verbose_name='讲价百分比', null=False)
-    # final_price = CharField(verbose_name='最终价格', null=False)
-    # origin_price = CharField(verbose_name='原始价格', null=False)
+    thumb_url = CharField(verbose_name='封面url', null=False)
+    released = CharField(verbose_name='发布日期', null=False)
+    discount = CharField(verbose_name='讲价百分比', null=False)
+    final_price = CharField(verbose_name='最终价格', null=False)
+    origin_price = CharField(verbose_name='原始价格', null=False)
 
     class Meta:
         database = db

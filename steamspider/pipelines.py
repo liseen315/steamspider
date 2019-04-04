@@ -7,6 +7,7 @@
 
 from .items import TopSellers
 
+
 class MySQLTopSellersPipeline(object):
 
     def process_item(self, item, spider):
@@ -14,8 +15,10 @@ class MySQLTopSellersPipeline(object):
             TopSellers.create_table()
 
         try:
-            TopSellers.create(app_id=item['app_id'], name=item['name'])
-        except Exception as e:
-            print(e)
+            TopSellers.get(TopSellers.app_id == item['app_id'])
+        except TopSellers.DoesNotExist:
+            TopSellers.create(app_id=item['app_id'], name=item['name'], thumb_url=item['thumb_url'],
+                              released=item['released'], discount=item['discount'], final_price=item['final_price'],
+                              origin_price=item['origin_price'])
 
         return item

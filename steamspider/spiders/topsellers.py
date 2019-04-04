@@ -56,20 +56,20 @@ class TopSellersSpider(Spider):
                     './/div[contains(@class,"search_discount")]/span/text()').extract_first()
 
                 percent_num = float(str(item['discount']).strip('%'))
-                item['origin_price'] = int(item['final_price']) * (percent_num / 100)
+                item['origin_price'] = round(int(item['final_price']) * (abs(percent_num / 100)))
 
             detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
 
             yield item
-
+            #
             # yield Request(detail_url, callback=self.parse_detail,
             #               meta={'app_id': app_item.xpath('@data-ds-appid').extract_first(),
             #                     'tag_ids': tagids[1:len(tagids) - 1]},)
 
         self.current_pagenum += 1
-        # if (self.current_pagenum < self.total_pagenum):
-        #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-        #                   callback=self.parse_topsellers)
+        if (self.current_pagenum < self.total_pagenum):
+            yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
+                          callback=self.parse_topsellers)
 
     def parse_detail(self, response):
 
