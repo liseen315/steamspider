@@ -20,16 +20,16 @@ class TopSellersSpider(Spider):
 
     def start_requests(self):
         yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                      callback=self.parse_topsellers)
+                      callback=self.parse_item)
 
-    def parse_topsellers(self, response):
+    def parse_item(self, response):
         total_pagestr = response.xpath('//div[@class="search_pagination_left"]/text()').extract_first().strip()
         self.total_apps = int(total_pagestr[total_pagestr.rfind('共') + 1:total_pagestr.rfind('个')].strip())
         self.total_pagenum = math.ceil(self.total_apps / 25)
         applist = response.xpath('//a[contains(@class,"search_result_row")]')
 
         for app_item in applist:
-            item = TopSellersItem()
+            item = self.create_item()
             item['name'] = app_item.xpath('.//span[@class="title"]/text()').extract_first()
             # steam 时间格式还不统一..我先不转换了..
             # timetuple = time.strptime(
@@ -58,31 +58,12 @@ class TopSellersSpider(Spider):
                 percent_num = float(str(item['discount']).strip('%'))
                 item['origin_price'] = round(int(item['final_price']) * (abs(percent_num / 100)))
 
-            detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
-
             yield item
-            #
-            # yield Request(detail_url, callback=self.parse_detail,
-            #               meta={'app_id': app_item.xpath('@data-ds-appid').extract_first(),
-            #                     'tag_ids': tagids[1:len(tagids) - 1]},)
 
         self.current_pagenum += 1
         if (self.current_pagenum < self.total_pagenum):
             yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                          callback=self.parse_topsellers)
+                          callback=self.parse_item)
 
-    def parse_detail(self, response):
-
-        item = TopSellersItem()
-        item['app_id'] = response.meta['app_id']
-
-        item['name'] = response.xpath('//div[@class="apphub_AppName"]/text()').extract_first()
-        item['tag_ids'] = response.meta['tag_ids']
-        # 现在去隐藏还有问题
-        item['popular_tags'] = response.xpath(
-            'normalize-space(//a[contains(@class,"app_tag") and not(contains(@style,"display:none"))]/text())').extract()
-        item['thumb_url'] = 'https://media.st.dl.bscstorage.net/steam/apps/{id}/header_292x136.jpg'.format(
-            id=response.meta['app_id'])
-        item['released'] = response.xpath('//div[@class="release_date"]/div[@class="date"]/text()').extract_first()
-
-        yield item
+    def create_item(self):
+        return TopSellersItem()

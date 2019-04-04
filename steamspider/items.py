@@ -20,6 +20,8 @@ class TopSellersItem(scrapy.Item):
     final_price = scrapy.Field()
     origin_price = scrapy.Field()
 
+class PopularNewsItem(TopSellersItem):
+    pass
 
 class AppDetailItem(TopSellersItem):
     pass
@@ -36,3 +38,6 @@ class TopSellers(Model):
 
     class Meta:
         database = db
+
+class PopularNews(TopSellers):
+    pass
