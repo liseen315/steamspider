@@ -7,17 +7,12 @@
 
 from .items import TopSellers
 
-
-class SteamspiderPipeline(object):
-    def process_item(self, item, spider):
-        return item
-
-
-class MySQLStorePipeline(object):
+class MySQLTopSellersPipeline(object):
 
     def process_item(self, item, spider):
         if TopSellers.table_exists() == False:
             TopSellers.create_table()
+
         try:
             TopSellers.create(app_id=item['app_id'], name=item['name'])
         except Exception as e:

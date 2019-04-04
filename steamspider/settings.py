@@ -69,7 +69,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     # 'scrapy_redis.pipelines.RedisPipeline': 300
-    'steamspider.pipelines.MySQLStorePipeline': 300
+    'steamspider.pipelines.MySQLTopSellersPipeline': 300
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
