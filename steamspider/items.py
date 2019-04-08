@@ -24,8 +24,13 @@ class PopularNewsItem(TopSellersItem):
     pass
 
 class AppDetailItem(TopSellersItem):
-    pass
-
+    des = scrapy.Field()
+    highlight_movie = scrapy.Field()
+    screenshot = scrapy.Field()
+    developers = scrapy.Field()
+    popular_tags = scrapy.Field()
+    game_area_metascore = scrapy.Field()
+    game_types = scrapy.Field()
 
 class TopSellers(Model):
     app_id = CharField(verbose_name='app唯一id', null=False, unique=True)
@@ -41,4 +46,7 @@ class TopSellers(Model):
         database = db
 
 class PopularNews(TopSellers):
+    pass
+
+class AppDetail(TopSellers):
     pass
