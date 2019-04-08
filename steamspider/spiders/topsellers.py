@@ -31,6 +31,8 @@ class TopSellersSpider(Spider):
         for app_item in applist:
             item = self.create_item()
             item['name'] = app_item.xpath('.//span[@class="title"]/text()').extract_first()
+            tag_xpath = app_item.xpath('@data-ds-tagids').extract_first()
+            item['tagids'] = tag_xpath[1:len(tag_xpath) - 1]
             # steam 时间格式还不统一..我先不转换了..
             # timetuple = time.strptime(
             #     app_item.xpath('.//div[contains(@class,"search_released")]/text()').extract_first(), "%Y年%m月%d日")

@@ -18,6 +18,7 @@ class TagsItem(scrapy.Item):
 class TopSellersItem(scrapy.Item):
     app_id = scrapy.Field()
     thumb_url = scrapy.Field()
+    tagids = scrapy.Field()
     name = scrapy.Field()
     released = scrapy.Field()
     discount = scrapy.Field()
@@ -34,6 +35,7 @@ class AppDetailItem(TopSellersItem):
     developers = scrapy.Field()
     popular_tags = scrapy.Field()
     game_area_metascore = scrapy.Field()
+    platforms = scrapy.Field()
 
 
 class Tag(Model):
@@ -48,11 +50,12 @@ class TopSellers(Model):
     app_id = CharField(verbose_name='app唯一id', null=False, unique=True)
     name = CharField(verbose_name='app名称', null=False)
     c_name = CharField(verbose_name='app中文名',null=True)
-    thumb_url = CharField(verbose_name='封面url', null=False)
+    thumb_url = CharField(verbose_name='封面url', null=True)
+    tagids = CharField(verbose_name='标签')
     released = CharField(verbose_name='发布日期', null=False)
-    discount = CharField(verbose_name='讲价百分比', null=False)
-    final_price = CharField(verbose_name='最终价格', null=False)
-    origin_price = CharField(verbose_name='原始价格', null=False)
+    discount = CharField(verbose_name='讲价百分比', null=False,default='0')
+    final_price = CharField(verbose_name='最终价格', null=False,default='0')
+    origin_price = CharField(verbose_name='原始价格', null=False,default='0')
 
     class Meta:
         database = db
@@ -67,3 +70,4 @@ class AppDetail(TopSellers):
     developers = CharField(verbose_name='开发商')
     popular_tags = CharField(verbose_name='热门标签')
     game_area_metascore = CharField(verbose_name='meta评分')
+    platforms = CharField(verbose_name='平台')
