@@ -30,6 +30,7 @@ class AppDetailItem(TopSellersItem):
 class TopSellers(Model):
     app_id = CharField(verbose_name='app唯一id', null=False, unique=True)
     name = CharField(verbose_name='app名称', null=False)
+    c_name = CharField(verbose_name='app中文名',null=True)
     thumb_url = CharField(verbose_name='封面url', null=False)
     released = CharField(verbose_name='发布日期', null=False)
     discount = CharField(verbose_name='讲价百分比', null=False)
