@@ -5,13 +5,13 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
-from .items import TopSellers, PopularNews
+from .items import TopSellers, PopularNews,Tag
 
 
 class MySQLPipeline(object):
 
     def __init__(self):
-        self.switch = {'topsellers': self.option_topsellers, 'poplularnew': self.option_popularnew}
+        self.switch = {'topsellers': self.option_topsellers, 'poplularnew': self.option_popularnew,'apptags':self.option_apptags}
 
     def option_topsellers(self, item):
         if TopSellers.table_exists() == False:
@@ -51,11 +51,19 @@ class MySQLPipeline(object):
                                final_price=item['final_price'],
                                origin_price=item['origin_price'])
 
+    def option_apptags(self,item):
+        if Tag.table_exists() == False:
+            Tag.create_table()
+        try:
+            Tag.get(Tag.tag_value == int(item['tag_value']))
+        except Tag.DoesNotExist:
+            Tag.create(tag_name=item['tag_name'],tag_value=item['tag_value'])
+
     def process_item(self, item, spider):
 
         try:
             self.switch[spider.name](item)
         except KeyError as e:
-            pass
+            print('error key value pipline')
 
         return item

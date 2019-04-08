@@ -20,7 +20,7 @@ class TagSpider(Spider):
                       callback=self.parse_tags)
 
     def parse_tags(self, response):
-        tag_list = response.xpath('//div[contains(@data-param,"tags")]').extract()
+        tag_list = response.xpath('//div[contains(@data-param,"tags")]')
         for tag_item in tag_list:
             item = TagsItem()
             item['tag_name'] = tag_item.xpath('@data-loc').extract_first()
