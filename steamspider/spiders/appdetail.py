@@ -36,6 +36,10 @@ class AppDetailSpider(Spider):
             self.browser.set_window_size(self.windowWidth, self.windowHeight)
         self.browser.set_page_load_timeout(self.timeout)  # 页面加载超时时间
         self.wait = WebDriverWait(self.browser, 25)
+        # 当详情爬虫爬完了关闭掉浏览器
+        dispatcher.connect(receiver=self.mySpiderCloseHandle,
+                           signal=signals.spider_closed
+                           )
 
     def start_requests(self):
         yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
@@ -81,6 +85,7 @@ class AppDetailSpider(Spider):
                           callback=self.parse_item,errback=self.error_parse)
 
     def parse_detail(self, response):
+
         if response.status in (302,) and 'Location' in response.headers:
             log("(parse_page) Location header: %s" % response.headers['Location'])
             yield Request(
@@ -108,9 +113,12 @@ class AppDetailSpider(Spider):
             desstr = des.xpath('string(.)').extract_first().strip()
 
             item['des'] = desstr[6:len(desstr)].strip()
-            # 轮播视频
-            item['highlight_movie'] = response.xpath('//div[contains(@id,"highlight_movie_")]')[0].xpath(
-                '@data-mp4-source').extract_first()
+
+            xpath_highlight_movie = response.xpath('//div[contains(@id,"highlight_movie_")]')
+            if len(xpath_highlight_movie) > 0:
+                # 轮播视频
+                item['highlight_movie'] = response.xpath('//div[contains(@id,"highlight_movie_")]')[0].xpath(
+                    '@data-mp4-source').extract_first()
             # 轮播图
             screen_path_list = response.xpath('//div[contains(@class,"highlight_screenshot")]/@id').extract()
             screen_list = []
@@ -139,46 +147,36 @@ class AppDetailSpider(Spider):
             else:
                 item['game_area_metascore'] = game_score.strip()
 
-            game_area_purchase_game_wrapper = response.xpath('//div[contains(@class,"game_area_purchase_game_wrapper")][1]')
-            platform_xpath_list = game_area_purchase_game_wrapper.xpath('.//span[contains(@class,"platform_img")]/@class').extract()
+            purchase_game_wrapper = response.xpath('//div[contains(@class,"game_area_purchase_game_wrapper")][1]')
+            platform_xpath_list = purchase_game_wrapper.xpath('.//span[contains(@class,"platform_img")]/@class').extract()
             platforms = []
             for platform_item in platform_xpath_list:
                 platforms.append(platform_item.split(' ')[1])
 
             item['platforms'] = ','.join(platforms)
 
-            xpath_discount_countdown = response.xpath(
-                '//p[@class="game_purchase_discount_countdown"]/text()').extract_first()
-
             # 这里会有倒计时,现在有问题
-            if (xpath_discount_countdown is not None):
-                item['discount_countdown'] = xpath_discount_countdown
+            if (len(purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]/text()')) > 0):
+                item['discount_countdown'] = purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]/text()').extract_first()
             else:
                 item['discount_countdown'] = '0'
 
-            xpath_price_final = response.xpath(
-                '//div[contains(@class,"game_purchase_discount")]/@data-price-final').extract_first()
-
-            if (xpath_price_final is not None):
-                item['final_price'] = xpath_price_final
+            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_block game_purchase_discount"]/@data-price-final')) > 0):
+                item['final_price'] = purchase_game_wrapper.xpath('.//div[@class="discount_block game_purchase_discount"]/@data-price-final').extract_first()
             else:
                 item['final_price'] = '0'
 
-            xpath_discount_pct = response.xpath(
-                '//div[contains(@class,"game_purchase_discount")]/div[@class="discount_pct"]/text()').extract_first()
+            xpath_discount_pct = purchase_game_wrapper.xpath(
+                './/div[@class="discount_pct"]/text()').extract_first()
 
-            if (xpath_discount_pct is not None):
-                item['discount'] = float(str(xpath_discount_pct).strip('%'))
+            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_pct"]/text()')) > 0):
+                item['discount'] = float(str(purchase_game_wrapper.xpath('.//div[@class="discount_pct"]/text()').extract_first()).strip('%'))
             else:
                 item['discount'] = '0'
 
-            hasdiscount = len(response.xpath('//div[contains(@class,"game_purchase_discount")]'))
-            has_game_wrapper = len(response.xpath('//div[contains(@class,"game_area_purchase_game_wrapper")]'))
-            if (hasdiscount > 0 and has_game_wrapper == 0):
-                discount = response.xpath('//div[contains(@class,"game_purchase_discount")]')
-                xpath_origin_price = \
-                    discount.xpath('.//div[@class="discount_original_price"]/text()').extract_first().split(' ')[1]
-                item['origin_price'] = int(xpath_origin_price) * 100
+            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]/text()')) > 0):
+                origin_price = purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]/text()').extract_first().split(' ')[1]
+                item['origin_price'] = int(origin_price) * 100
             else:
                 item['origin_price'] = '0'
 

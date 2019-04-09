@@ -117,7 +117,6 @@ class SeleniumMiddleware(object):
         if spider.name == 'appdetail':
             used_selenium = request.meta.get('used_selenium',False)
             if used_selenium:
-                print('====process_request======',request.url)
                 try:
                     spider.browser.get(request.url)
                     submit = spider.wait.until(
@@ -141,15 +140,17 @@ class SeleniumMiddleware(object):
                     submit.click()
 
                     try:
-                        element = WebDriverWait(spider.browser, 3).until(
+                        element = WebDriverWait(spider.browser, 5).until(
                             EC.presence_of_element_located((By.XPATH, '//div[@id="game_area_description"]')))
 
                         page_source = spider.browser.page_source
 
                         return HtmlResponse(url=request.url, body=page_source, request=request,
                                             encoding='utf-8', status=200)
-                    finally:
-                        spider.browser.quit()
+
+                    except TimeoutException as e:
+                        print(f"chrome getting page error, Exception = {e}")
+                        return HtmlResponse(url=request.url, status=500, request=request)
 
                 except Exception as e:
                     print(f"chrome getting page error, Exception = {e}")
