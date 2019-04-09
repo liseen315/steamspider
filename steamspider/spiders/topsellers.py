@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from scrapy import Spider, Request
 from steamspider.items import TopSellersItem
+from utils import log
 import math
 import time
 
@@ -20,7 +21,7 @@ class TopSellersSpider(Spider):
 
     def start_requests(self):
         yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                      callback=self.parse_item)
+                      callback=self.parse_item, errback=self.error_parse)
 
     def parse_item(self, response):
         total_pagestr = response.xpath('//div[@class="search_pagination_left"]/text()').extract_first().strip()
@@ -52,20 +53,24 @@ class TopSellersSpider(Spider):
 
             if (app_item.xpath('.//div[contains(@class,"search_discount")]/span/text()').extract_first() is None):
                 item['discount'] = '0'
-                item['origin_price'] = int(item['final_price']) * int(item['discount'])
+                # item['origin_price'] = int(item['final_price']) * int(item['discount'])
             else:
                 item['discount'] = app_item.xpath(
                     './/div[contains(@class,"search_discount")]/span/text()').extract_first()
 
                 percent_num = float(str(item['discount']).strip('%'))
-                item['origin_price'] = round(int(item['final_price']) * (abs(percent_num / 100)))
+                # item['origin_price'] = round(int(item['final_price']) * (abs(percent_num / 100)))
 
             yield item
 
         self.current_pagenum += 1
         if (self.current_pagenum < self.total_pagenum):
             yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                          callback=self.parse_item)
+                          callback=self.parse_item, errback=self.error_parse)
 
     def create_item(self):
         return TopSellersItem()
+
+    def error_parse(self, faiture):
+        request = faiture.request
+        utils.log('error_parse url:%s meta:%s' % (request.url, request.meta))

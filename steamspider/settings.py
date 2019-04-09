@@ -21,7 +21,7 @@ NEWSPIDER_MODULE = 'steamspider.spiders'
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-# CONCURRENT_REQUESTS = 32
+# CONCURRENT_REQUESTS = 1
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -54,8 +54,10 @@ DEFAULT_REQUEST_HEADERS = {
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     # 'steamspider.middlewares.SteamspiderDownloaderMiddleware': 543,
+    'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': None,
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
+    'steamspider.middlewares.SeleniumMiddleware': 401,
 
 }
 
@@ -93,15 +95,22 @@ ITEM_PIPELINES = {
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-
-SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+# ----------- scrapy redis 参数配置 -------------
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"      #启用redis的调度器
 
 SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.PriorityQueue'
 
-DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"      #redis去重
 
-REDIS_URL = 'redis://:Liseen315song@127.0.0.1:6379'
+REDIS_URL = 'redis://:Liseen315song@127.0.0.1:6379'         #redis本地url
 
 SCHEDULER_PERSIST = True
 
 SCHEDULER_FLUSH_ON_START = True
+
+
+# ----------- selenium 参数配置 -------------
+SELENIUM_TIMEOUT = 25           # selenium浏览器的超时时间，单位秒
+LOAD_IMAGE = True               # 是否下载图片
+WINDOW_HEIGHT = 900             # 浏览器窗口大小
+WINDOW_WIDTH = 900

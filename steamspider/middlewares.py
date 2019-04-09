@@ -4,8 +4,16 @@
 #
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+from scrapy.http import HtmlResponse
 from scrapy import signals
+from utils import log, get_platform
+import time
 
 
 class SteamspiderSpiderMiddleware(object):
@@ -101,3 +109,42 @@ class SteamspiderDownloaderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+
+class SeleniumMiddleware(object):
+
+    # 获取配置
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(timeout=crawler.settings.get('SELENIUM_TIMEOUT'),
+                   isLoadImage=crawler.settings.get('LOAD_IMAGE'),
+                   windowHeight=crawler.settings.get('WINDOW_HEIGHT'),
+                   windowWidth=crawler.settings.get('WINDOW_WIDTH'))
+
+    def __init__(self, timeout=30, isLoadImage=True, windowHeight=None, windowWidth=None):
+        self.timeout = timeout
+        self.isLoadImage = isLoadImage
+        self.platform = get_platform()
+        self.browser = webdriver.Chrome()
+        if windowHeight and windowWidth:
+            self.browser.set_window_size(windowWidth, windowHeight)
+        self.browser.set_page_load_timeout(self.timeout)
+        self.wait = WebDriverWait(self.browser, 25)
+
+    def process_request(self, request, spider):
+        log('chrome is getting page')
+        used_selenium = request.meta.get('used_selenium', False)
+        if used_selenium:
+            log('start used selenium')
+            try:
+                self.browser.get(request.url)
+            except Exception as e:
+                print(f"chrome getting page error, Exception = {e}")
+                return HtmlResponse(url=request.url, status=500, request=request)
+        else:
+            time.sleep(3)
+            return HtmlResponse(url=request.url,
+                                body=self.browser.page_source,
+                                request=request,
+                                encoding='utf-8',
+                                status=200)

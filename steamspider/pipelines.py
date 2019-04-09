@@ -29,8 +29,12 @@ class MySQLPipeline(object):
                     TopSellers.app_id == item['app_id']).execute()
 
         except TopSellers.DoesNotExist:
-            TopSellers.create(app_id=item['app_id'], name=item['name'], thumb_url=item['thumb_url'],
-                              released=item['released'], discount=item['discount'], final_price=item['final_price'],
+            TopSellers.create(app_id=item['app_id'],
+                              name=item['name'],
+                              thumb_url=item['thumb_url'],
+                              released=item['released'],
+                              discount=item['discount'],
+                              final_price=item['final_price'],
                               origin_price=item['origin_price'])
 
     def option_popularnew(self, item):
@@ -48,8 +52,11 @@ class MySQLPipeline(object):
                     PopularNews.app_id == item['app_id']).execute()
 
         except PopularNews.DoesNotExist:
-            PopularNews.create(app_id=item['app_id'], name=item['name'], thumb_url=item['thumb_url'],
-                               released=item['released'], discount=item['discount'],
+            PopularNews.create(app_id=item['app_id'],
+                               name=item['name'],
+                               thumb_url=item['thumb_url'],
+                               released=item['released'],
+                               discount=item['discount'],
                                final_price=item['final_price'],
                                origin_price=item['origin_price'])
 
@@ -76,11 +83,21 @@ class MySQLPipeline(object):
                     AppDetail.app_id == item['app_id']).execute()
 
         except AppDetail.DoesNotExist:
-            AppDetail.create(app_id=item['app_id'], name=item['name'], tagids=item['tagids']
-                             , released=item['released'], des=item['des'], highlight_movie=item['highlight_movie'],
-                             screenshot=item['screenshot'], developers=item['developers'],
+            AppDetail.create(app_id=item['app_id'],
+                             name=item['name'],
+                             tagids=item['tagids'],
+                             released=item['released'],
+                             discount = item['discount'],
+                             final_price = item['final_price'],
+                             des=item['des'],
+                             highlight_movie=item['highlight_movie'],
+                             screenshot=item['screenshot'],
+                             developers=item['developers'],
                              popular_tags=item['popular_tags'],
-                             game_area_metascore=item['game_area_metascore'])
+                             game_area_metascore=item['game_area_metascore'],
+                             platforms=item['platforms'],
+                             discount_countdown=item['discount_countdown'],
+                             origin_price=item['origin_price'])
 
     def process_item(self, item, spider):
 
