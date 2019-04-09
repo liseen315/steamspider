@@ -140,7 +140,7 @@ class SeleniumMiddleware(object):
                     submit.click()
 
                     try:
-                        element = WebDriverWait(spider.browser, 5).until(
+                        element = WebDriverWait(spider.browser, 10).until(
                             EC.presence_of_element_located((By.XPATH, '//div[@id="game_area_description"]')))
 
                         page_source = spider.browser.page_source
@@ -149,7 +149,7 @@ class SeleniumMiddleware(object):
                                             encoding='utf-8', status=200)
 
                     except TimeoutException as e:
-                        print(f"chrome getting page error, Exception = {e}")
+                        print(f"Timeout 320 , Exception = {e}")
                         return HtmlResponse(url=request.url, status=500, request=request)
 
                 except Exception as e:
