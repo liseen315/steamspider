@@ -32,7 +32,8 @@ class PopularNewsItem(TopSellersItem):
 
 
 class AppDetailItem(TopSellersItem):
-    des = scrapy.Field()
+    short_des = scrapy.Field()
+    full_des = scrapy.Field()
     highlight_movie = scrapy.Field()
     screenshot = scrapy.Field()
     developers = scrapy.Field()
@@ -71,7 +72,8 @@ class PopularNews(TopSellers):
 
 
 class AppDetail(TopSellers):
-    des = TextField(verbose_name='描述', null=True)
+    short_des = TextField(verbose_name='简短描述',null=True)
+    full_des = TextField(verbose_name='描述', null=True)
     highlight_movie = CharField(verbose_name='焦点图视频')
     screenshot = TextField(verbose_name='焦点图地址列表')
     developers = CharField(verbose_name='开发商')
