@@ -112,7 +112,8 @@ class AppDetailSpider(Spider):
             des = response.xpath('//div[@id="game_area_description"]')
             desstr = des.xpath('string(.)').extract_first().strip()
 
-            item['des'] = desstr[6:len(desstr)].strip()
+            item['short_des'] = response.xpath('//div[@class="game_description_snippet"]/text()').extract_first().strip()
+            item['full_des'] = desstr[6:len(desstr)].strip()
 
             xpath_highlight_movie = response.xpath('//div[contains(@id,"highlight_movie_")]')
             if len(xpath_highlight_movie) > 0:
