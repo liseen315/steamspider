@@ -83,7 +83,7 @@ class MySQLPipeline(object):
                     AppDetail.app_id == item['app_id']).execute()
 
         except AppDetail.DoesNotExist:
-            print('=====DoesNotExist===',item)
+            # print('=====DoesNotExist===',item)
             AppDetail.create(app_id=item['app_id'],
                              name=item['name'],
                              tagids=item['tagids'],

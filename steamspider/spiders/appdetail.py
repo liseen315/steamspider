@@ -55,6 +55,8 @@ class AppDetailSpider(Spider):
             yield Request(url=detail_url,
                           callback=self.parse_detail,
                           errback=self.error_parse,
+                          cookies={'wants_mature_content': '1', "birthtime": "725817601",
+                                   "lastagecheckage": "1-January-1993"},
                           meta={'app_id': app_id,
                                 'name': name,
                                 'released': released,
@@ -62,9 +64,9 @@ class AppDetailSpider(Spider):
                                 'thumb_url': thumb_url})
 
         self.current_pagenum += 1
-        if (self.current_pagenum < self.total_pagenum):
-            yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                          callback=self.parse_item,errback=self.error_parse)
+        # if (self.current_pagenum < self.total_pagenum):
+        #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
+        #                   callback=self.parse_item,errback=self.error_parse)
 
     def parse_detail(self, response):
 
@@ -151,7 +153,7 @@ class AppDetailSpider(Spider):
                 item['origin_price'] = int(origin_price) * 100
             else:
                 item['origin_price'] = '0'
-
+            print('===========response===',response.url)
             yield item
 
 
