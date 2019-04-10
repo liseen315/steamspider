@@ -1,11 +1,7 @@
-from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
 from scrapy import Spider, Request
 from steamspider.items import AppDetailItem
 from scrapy.utils.python import to_native_str
 from pydispatch import dispatcher
-from scrapy.utils.project import get_project_settings
-from scrapy import signals
 from utils import log
 import math
 import time
@@ -25,21 +21,7 @@ class AppDetailSpider(Spider):
         self.total_pagenum = None
         self.search_url = '{url}&page={pagenum}'
         self.screenshot_path = 'https://media.st.dl.bscstorage.net/steam/apps/{appid}/'
-        self.mysettings = get_project_settings()
-        self.timeout = self.mysettings['SELENIUM_TIMEOUT']
-        self.isLoadImage = self.mysettings['LOAD_IMAGE']
-        self.windowHeight = self.mysettings['WINDOW_HEIGHT']
-        self.windowWidth = self.mysettings['windowWidth']
-        # 初始化chrome对象
-        self.browser = webdriver.Chrome()
-        if self.windowHeight and self.windowWidth:
-            self.browser.set_window_size(self.windowWidth, self.windowHeight)
-        self.browser.set_page_load_timeout(self.timeout)  # 页面加载超时时间
-        self.wait = WebDriverWait(self.browser, 25)
-        # 当详情爬虫爬完了关闭掉浏览器
-        dispatcher.connect(receiver=self.mySpiderCloseHandle,
-                           signal=signals.spider_closed
-                           )
+
 
     def start_requests(self):
         yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
@@ -86,23 +68,11 @@ class AppDetailSpider(Spider):
 
     def parse_detail(self, response):
 
-        if response.status in (302,) and 'Location' in response.headers:
-            log("(parse_page) Location header: %s" % response.headers['Location'])
-            yield Request(
-                url=to_native_str(response.headers['Location']),
-                callback=self.parse_detail,
-                errback= self.error_parse,
-                # dont_filter=True,
-                # cookies={'wants_mature_content': '1'},
-                meta={'used_selenium': True,
-                      'dont_redirect': True,
-                      'app_id': response.meta['app_id'],
-                      'name': response.meta['name'],
-                      'released': response.meta['released'],
-                      'tagids': response.meta['tagids'],
-                      'thumb_url': response.meta['thumb_url']})
-
         if response.status in (200,):
+            if u'/sub/' in response.url:
+                # 礼包
+                self.parse_sub(response)
+                return
             item = AppDetailItem()
             item['app_id'] = response.meta['app_id']
             item['thumb_url'] = response.meta['thumb_url']
@@ -110,13 +80,9 @@ class AppDetailSpider(Spider):
             item['name'] = response.meta['name']
             item['released'] = response.meta['released']
 
-            if u'/sub/' in response.url:
-                # 礼包
-                self.parse_sub(response)
-                return
-
             des = response.xpath('//div[@id="game_area_description"]')
-            desstr = des.xpath('string(.)').extract_first().strip()
+            if len(des) > 0 :
+                desstr = des.xpath('string(.)').extract_first().strip()
 
             item['short_des'] = response.xpath('//div[@class="game_description_snippet"]/text()').extract_first().strip()
             item['full_des'] = ''

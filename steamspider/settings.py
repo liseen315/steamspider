@@ -57,7 +57,7 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': None,
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
-    'steamspider.middlewares.SeleniumMiddleware': 401,
+    # 'steamspider.middlewares.SeleniumMiddleware': 401,
 
 }
 
