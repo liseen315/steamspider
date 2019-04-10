@@ -109,6 +109,12 @@ class AppDetailSpider(Spider):
             item['tagids'] = response.meta['tagids']
             item['name'] = response.meta['name']
             item['released'] = response.meta['released']
+
+            if u'/sub/' in response.url:
+                # 礼包
+                self.parse_sub(response)
+                return
+
             des = response.xpath('//div[@id="game_area_description"]')
             desstr = des.xpath('string(.)').extract_first().strip()
 
@@ -186,6 +192,9 @@ class AppDetailSpider(Spider):
     def error_parse(self, faiture):
         request = faiture.request
         log('error_parse url:%s meta:%s' % (request.url, request.meta))
+
+    def parse_sub(self,response):
+        pass
 
     def mySpiderCloseHandle(self):
         try:
