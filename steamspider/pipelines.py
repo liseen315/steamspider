@@ -83,15 +83,14 @@ class MySQLPipeline(object):
                     AppDetail.app_id == item['app_id']).execute()
 
         except AppDetail.DoesNotExist:
-            # print('=====DoesNotExist===',item)
             AppDetail.create(app_id=item['app_id'],
                              name=item['name'],
                              tagids=item['tagids'],
                              released=item['released'],
-                             discount = item['discount'],
-                             final_price = item['final_price'],
+                             discount=item['discount'],
+                             final_price=item['final_price'],
                              short_des=item['short_des'],
-                             full_des = item['full_des'],
+                             full_des=item['full_des'],
                              highlight_movie=item['highlight_movie'],
                              screenshot=item['screenshot'],
                              developers=item['developers'],
@@ -99,7 +98,9 @@ class MySQLPipeline(object):
                              game_area_metascore=item['game_area_metascore'],
                              platforms=item['platforms'],
                              discount_countdown=item['discount_countdown'],
-                             origin_price=item['origin_price'])
+                             origin_price=item['origin_price'],
+                             origin_uri=item['origin_uri']
+                             )
 
     def process_item(self, item, spider):
 

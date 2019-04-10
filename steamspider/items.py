@@ -24,8 +24,6 @@ class TopSellersItem(scrapy.Item):
     released = scrapy.Field()
     discount = scrapy.Field()
     final_price = scrapy.Field()
-    # origin_price = scrapy.Field()
-
 
 class PopularNewsItem(TopSellersItem):
     pass
@@ -43,6 +41,7 @@ class AppDetailItem(TopSellersItem):
     # 降价截至日期
     discount_countdown = scrapy.Field()
     origin_price = scrapy.Field()
+    origin_uri = scrapy.Field()
 
 
 class Tag(Model):
@@ -82,3 +81,4 @@ class AppDetail(TopSellers):
     platforms = CharField(verbose_name='平台',null=False,default='')
     discount_countdown = CharField(verbose_name='降价截至日期', null=False, default='0')
     origin_price = CharField(verbose_name='原始价格', null=False, default='0')
+    origin_uri = CharField(verbose_name='app的网页路径',null=False)

@@ -35,10 +35,10 @@ class AppDetailSpider(Spider):
 
         for app_item in applist:
             detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
-            name = app_item.xpath('.//span[@class="title"]/text()').extract_first()
+            # name = app_item.xpath('.//span[@class="title"]/text()').extract_first()
             tag_xpath = app_item.xpath('@data-ds-tagids').extract_first()
             tagids = tag_xpath[1:len(tag_xpath) - 1]
-            released = app_item.xpath('.//div[contains(@class,"search_released")]/text()').extract_first()
+            # released = app_item.xpath('.//div[contains(@class,"search_released")]/text()').extract_first()
             app_id = ''
             thumb_url = ''
             if (app_item.xpath('@data-ds-packageid').extract_first() is None):
@@ -50,7 +50,7 @@ class AppDetailSpider(Spider):
                 thumb_url = 'https://media.st.dl.bscstorage.net/steam/subs/{appid}/header_292x136.jpg'.format(
                     appid=app_item.xpath('@data-ds-packageid').extract_first())
 
-            # detail_url = 'https://store.steampowered.com/app/323190/Frostpunk/?snr=1_7_7_230_150_1&l=schinese'
+            # detail_url = 'https://store.steampowered.com/app/958260/DEAD_OR_ALIVE_Xtreme_Venus_Vacation/?snr=1_7_7_230_150_1&l=schinese'
 
             yield Request(url=detail_url,
                           callback=self.parse_detail,
@@ -58,15 +58,13 @@ class AppDetailSpider(Spider):
                           cookies={'wants_mature_content': '1', "birthtime": "725817601",
                                    "lastagecheckage": "1-January-1993"},
                           meta={'app_id': app_id,
-                                'name': name,
-                                'released': released,
                                 'tagids': tagids,
                                 'thumb_url': thumb_url})
 
         self.current_pagenum += 1
-        # if (self.current_pagenum < self.total_pagenum):
-        #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-        #                   callback=self.parse_item,errback=self.error_parse)
+        if (self.current_pagenum < self.total_pagenum):
+            yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
+                          callback=self.parse_item,errback=self.error_parse)
 
     def parse_detail(self, response):
 
@@ -79,8 +77,16 @@ class AppDetailSpider(Spider):
             item['app_id'] = response.meta['app_id']
             item['thumb_url'] = response.meta['thumb_url']
             item['tagids'] = response.meta['tagids']
-            item['name'] = response.meta['name']
-            item['released'] = response.meta['released']
+            item['origin_uri'] = response.url
+            item['name'] = response.xpath('//div[@class="apphub_AppIcon"]/text()').extract_first()
+            # if '958260' in response.url:
+            #     from scrapy.shell import inspect_response
+            #     inspect_response(response, self)
+
+            release = response.xpath('//div[@class="release_date"]')
+
+            if len(release) > 0:
+                item['release'] = release.xpath('.//div[@class="date"]/text()').extract_first()
 
             des = response.xpath('//div[@id="game_area_description"]')
             if len(des) > 0 :
@@ -130,30 +136,32 @@ class AppDetailSpider(Spider):
             item['platforms'] = ','.join(platforms)
 
             # 这里会有倒计时,现在有问题
-            if (len(purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]/text()')) > 0):
+            if (len(purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]')) > 0):
                 item['discount_countdown'] = purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]/text()').extract_first()
             else:
                 item['discount_countdown'] = '0'
 
-            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_block game_purchase_discount"]/@data-price-final')) > 0):
-                item['final_price'] = purchase_game_wrapper.xpath('.//div[@class="discount_block game_purchase_discount"]/@data-price-final').extract_first()
+            xpath_final_price = purchase_game_wrapper.xpath('.//div[@class="discount_block game_purchase_discount"]/@data-price-final')
+            if (len(xpath_final_price) > 0):
+                item['final_price'] = xpath_final_price.extract_first()
             else:
                 item['final_price'] = '0'
 
-            xpath_discount_pct = purchase_game_wrapper.xpath(
-                './/div[@class="discount_pct"]/text()').extract_first()
+            xpath_discount_pct = purchase_game_wrapper.xpath('.//div[@class="game_purchase_discount"]/div[@class="discount_pct"]')
 
-            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_pct"]/text()')) > 0):
+            if (len(xpath_discount_pct) > 0):
                 item['discount'] = float(str(purchase_game_wrapper.xpath('.//div[@class="discount_pct"]/text()').extract_first()).strip('%'))
             else:
                 item['discount'] = '0'
 
-            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]/text()')) > 0):
+            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]')) > 0):
                 origin_price = purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]/text()').extract_first().split(' ')[1]
                 item['origin_price'] = int(origin_price) * 100
             else:
                 item['origin_price'] = '0'
-            print('===========response===',response.url)
+
+
+            # print('===========response===',item)
             yield item
 
 
