@@ -113,7 +113,7 @@ class AppDetailSpider(Spider):
             desstr = des.xpath('string(.)').extract_first().strip()
 
             item['short_des'] = response.xpath('//div[@class="game_description_snippet"]/text()').extract_first().strip()
-            item['full_des'] = desstr[6:len(desstr)].strip()
+            item['full_des'] = ''
 
             xpath_highlight_movie = response.xpath('//div[contains(@id,"highlight_movie_")]')
             if len(xpath_highlight_movie) > 0:
@@ -125,8 +125,7 @@ class AppDetailSpider(Spider):
             screen_list = []
 
             for sitem in screen_path_list:
-                conver_url = self.screenshot_path.format(appid=response.meta['app_id']) + sitem[
-                                                                                          sitem.index('ss_'):len(sitem)]
+                conver_url = self.screenshot_path.format(appid=response.meta['app_id']) + sitem[len('thumb_screenshot_'):len(sitem)]
                 screen_list.append(conver_url)
             item['screenshot'] = ','.join(screen_list)
 

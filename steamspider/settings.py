@@ -21,7 +21,7 @@ NEWSPIDER_MODULE = 'steamspider.spiders'
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 16
+# CONCURRENT_REQUESTS = 16
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -111,6 +111,8 @@ SCHEDULER_FLUSH_ON_START = True
 
 # ----------- selenium 参数配置 -------------
 SELENIUM_TIMEOUT = 25           # selenium浏览器的超时时间，单位秒
-LOAD_IMAGE = True               # 是否下载图片
+LOAD_IMAGE = False               # 是否下载图片
 WINDOW_HEIGHT = 900             # 浏览器窗口大小
 WINDOW_WIDTH = 900
+
+LOG_LEVEL = 'ERROR'
