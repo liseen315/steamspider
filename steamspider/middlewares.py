@@ -4,17 +4,6 @@
 #
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
-from scrapy.http import HtmlResponse
-from scrapy import signals
-from utils import log, get_platform
-import time
-
-
 class SteamspiderSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
@@ -108,50 +97,3 @@ class SteamspiderDownloaderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
-
-
-class SeleniumMiddleware(object):
-
-    def process_request(self, request, spider):
-
-        if spider.name == 'appdetail':
-            used_selenium = request.meta.get('used_selenium',False)
-            if used_selenium:
-                try:
-                    spider.browser.get(request.url)
-                    submit = spider.wait.until(
-                        EC.presence_of_element_located((By.XPATH, '//a[contains(@class,"btnv6_blue_hoverfade btn_medium")][1]')))
-
-                    spider.browser.implicitly_wait(1)
-                    day = spider.browser.find_element_by_xpath('//select[@name="ageDay"]/option[text()="15"]')
-                    spider.browser.implicitly_wait(1)
-                    day.click()
-
-                    month = spider.browser.find_element_by_xpath('//select[@name="ageMonth"]/option[text()="March"]')
-                    spider.browser.implicitly_wait(1)
-                    month.click()
-
-                    year = spider.browser.find_element_by_xpath('//select[@name="ageYear"]/option[text()="1985"]')
-
-                    spider.browser.implicitly_wait(1)
-                    year.click()
-
-                    spider.browser.implicitly_wait(1)
-                    submit.click()
-
-                    try:
-                        element = WebDriverWait(spider.browser, 10).until(
-                            EC.presence_of_element_located((By.XPATH, '//div[@id="game_area_description"]')))
-
-                        page_source = spider.browser.page_source
-
-                        return HtmlResponse(url=request.url, body=page_source, request=request,
-                                            encoding='utf-8', status=200)
-
-                    except TimeoutException as e:
-                        print(f"Timeout 320 , Exception = {e}")
-                        return HtmlResponse(url=request.url, status=500, request=request)
-
-                except Exception as e:
-                    print(f"chrome getting page error, Exception = {e}")
-                    return HtmlResponse(url=request.url, status=500, request=request)

@@ -21,12 +21,12 @@ NEWSPIDER_MODULE = 'steamspider.spiders'
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 16
+# CONCURRENT_REQUESTS = 16
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-# DOWNLOAD_DELAY = 5
+# DOWNLOAD_DELAY = 1
 # RANDOMIZE_DOWNLOAD_DELAY = True
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
@@ -57,8 +57,6 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': None,
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
-    'steamspider.middlewares.SeleniumMiddleware': 401,
-
 }
 
 # Enable or disable extensions
@@ -114,3 +112,6 @@ SELENIUM_TIMEOUT = 25           # selenium浏览器的超时时间，单位秒
 LOAD_IMAGE = True               # 是否下载图片
 WINDOW_HEIGHT = 900             # 浏览器窗口大小
 WINDOW_WIDTH = 900
+
+#log 等级
+LOG_LEVEL = 'ERROR'
