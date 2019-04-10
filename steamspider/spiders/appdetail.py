@@ -73,6 +73,8 @@ class AppDetailSpider(Spider):
             yield Request(url=detail_url,
                           callback=self.parse_detail,
                           errback=self.error_parse,
+                          cookies={'wants_mature_content': '1', "birthtime": "725817601",
+                                   "lastagecheckage": "1-January-1993"},
                           meta={'app_id': app_id,
                                 'name': name,
                                 'released': released,
@@ -82,20 +84,20 @@ class AppDetailSpider(Spider):
         self.current_pagenum += 1
         if (self.current_pagenum < self.total_pagenum):
             yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                          callback=self.parse_item,errback=self.error_parse)
+                          callback=self.parse_item, errback=self.error_parse)
 
     def parse_detail(self, response):
 
         if response.status in (302,) and 'Location' in response.headers:
-            log("(parse_page) Location header: %s" % response.headers['Location'])
+            log("请求重定向==111111==: %s" % response.headers['Location'])
             yield Request(
                 url=to_native_str(response.headers['Location']),
                 callback=self.parse_detail,
-                errback= self.error_parse,
+                errback=self.error_parse,
                 # dont_filter=True,
-                # cookies={'wants_mature_content': '1'},
+                cookies={'wants_mature_content': '1'},
                 meta={'used_selenium': True,
-                      'dont_redirect': True,
+                      # 'dont_redirect': True,
                       'app_id': response.meta['app_id'],
                       'name': response.meta['name'],
                       'released': response.meta['released'],
@@ -103,6 +105,18 @@ class AppDetailSpider(Spider):
                       'thumb_url': response.meta['thumb_url']})
 
         if response.status in (200,):
+            print('=====response==200==url=====', response.url)
+            if "agecheck" in response.url:
+                return
+
+            if "49520" in response.url:
+                from scrapy.shell import inspect_response
+                inspect_response(response, self)
+
+            if u'/sub/' in response.url:
+                # 礼包
+                self.parse_sub(response)
+                return
             item = AppDetailItem()
             item['app_id'] = response.meta['app_id']
             item['thumb_url'] = response.meta['thumb_url']
@@ -110,15 +124,12 @@ class AppDetailSpider(Spider):
             item['name'] = response.meta['name']
             item['released'] = response.meta['released']
 
-            if u'/sub/' in response.url:
-                # 礼包
-                self.parse_sub(response)
-                return
-
             des = response.xpath('//div[@id="game_area_description"]')
-            desstr = des.xpath('string(.)').extract_first().strip()
+            if len(des) > 0:
+                desstr = des.xpath('string(.)').extract_first().strip()
 
-            item['short_des'] = response.xpath('//div[@class="game_description_snippet"]/text()').extract_first().strip()
+            item['short_des'] = response.xpath(
+                '//div[@class="game_description_snippet"]/text()').extract_first().strip()
             item['full_des'] = ''
 
             xpath_highlight_movie = response.xpath('//div[contains(@id,"highlight_movie_")]')
@@ -131,7 +142,9 @@ class AppDetailSpider(Spider):
             screen_list = []
 
             for sitem in screen_path_list:
-                conver_url = self.screenshot_path.format(appid=response.meta['app_id']) + sitem[len('thumb_screenshot_'):len(sitem)]
+                conver_url = self.screenshot_path.format(appid=response.meta['app_id']) + sitem[
+                                                                                          len('thumb_screenshot_'):len(
+                                                                                              sitem)]
                 screen_list.append(conver_url)
             item['screenshot'] = ','.join(screen_list)
 
@@ -154,7 +167,8 @@ class AppDetailSpider(Spider):
                 item['game_area_metascore'] = game_score.strip()
 
             purchase_game_wrapper = response.xpath('//div[contains(@class,"game_area_purchase_game_wrapper")][1]')
-            platform_xpath_list = purchase_game_wrapper.xpath('.//span[contains(@class,"platform_img")]/@class').extract()
+            platform_xpath_list = purchase_game_wrapper.xpath(
+                './/span[contains(@class,"platform_img")]/@class').extract()
             platforms = []
             for platform_item in platform_xpath_list:
                 platforms.append(platform_item.split(' ')[1])
@@ -163,12 +177,15 @@ class AppDetailSpider(Spider):
 
             # 这里会有倒计时,现在有问题
             if (len(purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]/text()')) > 0):
-                item['discount_countdown'] = purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]/text()').extract_first()
+                item['discount_countdown'] = purchase_game_wrapper.xpath(
+                    './/p[@class="game_purchase_discount_countdown"]/text()').extract_first()
             else:
                 item['discount_countdown'] = '0'
 
-            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_block game_purchase_discount"]/@data-price-final')) > 0):
-                item['final_price'] = purchase_game_wrapper.xpath('.//div[@class="discount_block game_purchase_discount"]/@data-price-final').extract_first()
+            if (len(purchase_game_wrapper.xpath(
+                    './/div[@class="discount_block game_purchase_discount"]/@data-price-final')) > 0):
+                item['final_price'] = purchase_game_wrapper.xpath(
+                    './/div[@class="discount_block game_purchase_discount"]/@data-price-final').extract_first()
             else:
                 item['final_price'] = '0'
 
@@ -176,24 +193,26 @@ class AppDetailSpider(Spider):
                 './/div[@class="discount_pct"]/text()').extract_first()
 
             if (len(purchase_game_wrapper.xpath('.//div[@class="discount_pct"]/text()')) > 0):
-                item['discount'] = float(str(purchase_game_wrapper.xpath('.//div[@class="discount_pct"]/text()').extract_first()).strip('%'))
+                item['discount'] = float(
+                    str(purchase_game_wrapper.xpath('.//div[@class="discount_pct"]/text()').extract_first()).strip('%'))
             else:
                 item['discount'] = '0'
 
             if (len(purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]/text()')) > 0):
-                origin_price = purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]/text()').extract_first().split(' ')[1]
+                origin_price = \
+                purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]/text()').extract_first().split(
+                    ' ')[1]
                 item['origin_price'] = int(origin_price) * 100
             else:
                 item['origin_price'] = '0'
 
             yield item
 
-
     def error_parse(self, faiture):
         request = faiture.request
         log('error_parse url:%s meta:%s' % (request.url, request.meta))
 
-    def parse_sub(self,response):
+    def parse_sub(self, response):
         pass
 
     def mySpiderCloseHandle(self):

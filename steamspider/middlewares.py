@@ -116,8 +116,10 @@ class SeleniumMiddleware(object):
 
         if spider.name == 'appdetail':
             used_selenium = request.meta.get('used_selenium',False)
+
             if used_selenium:
                 try:
+                    print('===请求重定向====', request)
                     spider.browser.get(request.url)
                     submit = spider.wait.until(
                         EC.presence_of_element_located((By.XPATH, '//a[contains(@class,"btnv6_blue_hoverfade btn_medium")][1]')))
@@ -139,16 +141,26 @@ class SeleniumMiddleware(object):
                     spider.browser.implicitly_wait(1)
                     submit.click()
 
+                    # time.sleep(5)
+                    # page_source = spider.browser.page_source
+                    # request.meta.set('used_selenium', False)
+                    # print('=====Form ====Reponse=====', request.meta)
+                    # return HtmlResponse(url=request.url, body=page_source, request=request,
+                    #                         encoding='utf-8', status=200,meta=request.meta)
+
                     try:
                         element = WebDriverWait(spider.browser, 5).until(
                             EC.presence_of_element_located((By.XPATH, '//div[@id="game_area_description"]')))
 
                         page_source = spider.browser.page_source
+                        request.meta['used_selenium'] = False
 
-                        return HtmlResponse(url=request.url, body=page_source, request=request,
-                                            encoding='utf-8', status=200,meta=request.meta)
+                        location_url = 'https://store.steampowered.com/app/{appid}/{name}/'.format(appid=request.meta['app_id'],name=request.meta['name'])
+                        print('=====重定向相应=====', location_url)
+                        return HtmlResponse(url=location_url,body=page_source,encoding='utf-8', status=200,meta=request.meta)
 
                     except TimeoutException as e:
+                        print('=====Form页面===请求超时====')
                         return HtmlResponse(url=request.url, status=500, request=request)
 
                 except Exception as e:

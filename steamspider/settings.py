@@ -55,6 +55,7 @@ DEFAULT_REQUEST_HEADERS = {
 DOWNLOADER_MIDDLEWARES = {
     # 'steamspider.middlewares.SteamspiderDownloaderMiddleware': 543,
     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': None,
+    'scrapy.contrib.downloadermiddleware.redirect.MetaRefreshMiddleware':None,
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
     'steamspider.middlewares.SeleniumMiddleware': 401,
@@ -70,8 +71,8 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    # 'scrapy_redis.pipelines.RedisPipeline': 300
-    'steamspider.pipelines.MySQLPipeline': 300,
+    'scrapy_redis.pipelines.RedisPipeline': 300
+    # 'steamspider.pipelines.MySQLPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
