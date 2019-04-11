@@ -1,10 +1,8 @@
 from scrapy import Spider, Request
-from steamspider.items import AppDetailItem
-from scrapy.utils.python import to_native_str
-from pydispatch import dispatcher
 from utils import log
+from steamspider.items import AppDetailItem
 import math
-import time
+import re
 
 
 class AppDetailSpider(Spider):
@@ -15,163 +13,139 @@ class AppDetailSpider(Spider):
     def __init__(self, *args, **kwargs):
         super(AppDetailSpider, self).__init__(*args, **kwargs)
 
-        self.page_url = 'https://store.steampowered.com/search/results?search/&l=schinese&category1=998,21,10'
+        self.page_url = 'https://store.steampowered.com/search/results?search/&l=schinese&category1=10,998,21'
         self.current_pagenum = 1
-        self.total_apps = None
-        self.total_pagenum = None
+        self.total_apps = 0
+        self.total_pagenum = 0
         self.search_url = '{url}&page={pagenum}'
-        self.screenshot_path = 'https://media.st.dl.bscstorage.net/steam/apps/{appid}/'
-
+        self.media_path = 'https://media.st.dl.bscstorage.net/steam/{type}/{appid}/header_292x136.jpg'
+        self.parse_switch = {'app':self.parse_app,'subs':self.parse_sub}
 
     def start_requests(self):
         yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                      callback=self.parse_item)
+                      callback=self.parse_page)
 
-    def parse_item(self, response):
+    def parse_page(self, response):
         total_pagestr = response.xpath('//div[@class="search_pagination_left"]/text()').extract_first().strip()
         self.total_apps = int(total_pagestr[total_pagestr.rfind('共') + 1:total_pagestr.rfind('个')].strip())
         self.total_pagenum = math.ceil(self.total_apps / 25)
+
+        print('=======parse_page=====', self.total_apps, self.total_pagenum, self.current_pagenum)
+
         applist = response.xpath('//a[contains(@class,"search_result_row")]')
 
         for app_item in applist:
+
             detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
+            app_id, app_type = self.get_id(detail_url)
 
-            xpath_tag = app_item.xpath('@data-ds-tagids')
-            if len(xpath_tag) > 0:
-                tagids = xpath_tag.extract_first()[1:len(tag_xpath) - 1]
+            if app_id and app_type is not 'error':
 
-            app_id = ''
-            thumb_url = ''
-            if (app_item.xpath('@data-ds-packageid').extract_first() is None):
-                app_id = app_item.xpath('@data-ds-appid').extract_first()
-                thumb_url = 'https://media.st.dl.bscstorage.net/steam/apps/{appid}/header_292x136.jpg'.format(
-                    appid=app_item.xpath('@data-ds-appid').extract_first())
-            else:
-                app_id = app_item.xpath('@data-ds-packageid').extract_first()
-                thumb_url = 'https://media.st.dl.bscstorage.net/steam/subs/{appid}/header_292x136.jpg'.format(
-                    appid=app_item.xpath('@data-ds-packageid').extract_first())
+                xpath_tag = app_item.xpath('@data-ds-tagids')
+                if len(xpath_tag) > 0:
+                    tagids = xpath_tag.extract_first()[1:len(xpath_tag) - 1]
 
-            yield Request(url=detail_url,
-                          callback=self.parse_detail,
-                          errback=self.error_parse,
-                          cookies={'wants_mature_content': '1',
-                                   "birthtime": "725817601",
-                                   "lastagecheckage": "1-January-1993"},
-                          meta={'app_id': app_id,
-                                'tagids': tagids,
-                                'thumb_url': thumb_url})
+                thumb_url = self.media_path.format(type=app_type,appid=app_id)
+
+                yield Request(url=detail_url,
+                              callback=self.parse_switch[app_type],
+                              errback=self.parse_error,
+                              cookies={'wants_mature_content': '1',
+                                       "birthtime": "725817601",
+                                       "lastagecheckage": "1-January-1993"},
+                              meta={'app_id': app_id,
+                                    'app_type': app_type,
+                                    'tagids': tagids,
+                                    'thumb_url': thumb_url})
 
         self.current_pagenum += 1
         # if (self.current_pagenum < self.total_pagenum):
         #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-        #                   callback=self.parse_item,errback=self.error_parse)
+        #                   callback=self.parse_page,errback=self.error_parse)
 
-    def parse_detail(self, response):
-
+    # 解析普通的app
+    def parse_app(self,response):
         if response.status in (200,):
-            if u'/sub/' in response.url:
-                # 礼包
-                self.parse_sub(response)
-                return
             item = AppDetailItem()
+            # 强行设置一堆默认空字符串
+            item.set_defalut('')
+
             item['app_id'] = response.meta['app_id']
-            item['thumb_url'] = response.meta['thumb_url']
-            item['tagids'] = response.meta['tagids']
-            item['origin_uri'] = response.url
+            item['app_type'] = response.meta['app_type']
             item['name'] = response.xpath('//div[@class="apphub_AppName"]/text()').extract_first()
-
+            # 发行日期
             release = response.xpath('//div[@class="release_date"]')
-
             if len(release) > 0:
                 item['released'] = release.xpath('.//div[@class="date"]/text()').extract_first()
 
-            des = response.xpath('//div[@id="game_area_description"]')
-            if len(des) > 0 :
-                desstr = des.xpath('string(.)').extract_first().strip()
+            # 获取预售大节点
+            xpath_purchase = response.xpath('//div[@id="game_area_purchase"]')
 
-            item['short_des'] = response.xpath('//div[@class="game_description_snippet"]/text()').extract_first().strip()
-            item['full_des'] = ''
+            # 支持平台
+            if len(xpath_purchase.xpath('.//div[@class="game_area_purchase_platform"]')) > 0:
+                xpath_platform_list = xpath_purchase.xpath('.//div[@class="game_area_purchase_platform"]')[0].xpath('.//span/@class').extract()
+                platforms = []
+                for platform_item in xpath_platform_list:
+                    platforms.append(platform_item.split(' ')[1])
 
-            xpath_highlight_movie = response.xpath('//div[contains(@id,"highlight_movie_")]')
-            if len(xpath_highlight_movie) > 0:
-                # 轮播视频
-                item['highlight_movie'] = response.xpath('//div[contains(@id,"highlight_movie_")]')[0].xpath(
-                    '@data-mp4-source').extract_first()
-            # 轮播图
-            screen_path_list = response.xpath('//div[contains(@class,"highlight_screenshot")]/@id').extract()
-            screen_list = []
+                item['platforms'] = ','.join(platforms)
 
-            for sitem in screen_path_list:
-                conver_url = self.screenshot_path.format(appid=response.meta['app_id']) + sitem[len('thumb_screenshot_'):len(sitem)]
-                screen_list.append(conver_url)
-            item['screenshot'] = ','.join(screen_list)
+            # 原始价格
+            xpath_original_price = xpath_purchase.xpath('.//div[@class="discount_original_price"]')
+            if len(xpath_original_price) > 0:
+                origin_price = xpath_original_price[0].xpath('text()').extract_first().split(' ')[1]
+                item['origin_price'] = str(int(origin_price) * 100)
 
-            item['developers'] = response.xpath('//div[contains(@id,"developers_list")]/a/text()').extract_first()
+            # 折扣
+            xpath_discount_pct = xpath_purchase.xpath('.//div[@class="discount_pct"]')
+            if len(xpath_discount_pct) > 0:
+                item['discount']=xpath_discount_pct[0].xpath('text()').extract_first().strip('%')
 
-            popular_tags_xpath = response.xpath(
-                '//div[contains(@class,"popular_tags_ctn")]//div[contains(@class,"popular_tags")]/a/text()').extract()
+            # 折扣截至
+            xpath_discount_countdown = xpath_purchase.xpath('.//p[@class="game_purchase_discount_countdown"]')
+            if len(xpath_discount_countdown) > 0:
+                pattern = re.compile('/(\d+)月(\d+)日/', re.S)
+                str_countdown = xpath_discount_countdown[0].xpath('text()').extract_first()
+                item['discount_countdown']= re.search(pattern,str_countdown).groups(1)
 
-            popular_taglist = []
-            for poular_tag_item in popular_tags_xpath:
-                popular_taglist.append(poular_tag_item.strip())
+            # 现价
+            xpath_final_price = xpath_purchase.xpath('.//@data-price-final')
+            if len(xpath_final_price) > 0:
+                item['final_price'] = xpath_final_price[0].extract()
 
-            item['popular_tags'] = ','.join(popular_taglist)
-
-            game_score = response.xpath(
-                '//div[contains(@id,"game_area_metascore")]/div[contains(@class,"score")]/text()').extract_first()
-            if (game_score is None):
-                item['game_area_metascore'] = 0
-            else:
-                item['game_area_metascore'] = game_score.strip()
-
-            purchase_game_wrapper = response.xpath('//div[contains(@class,"game_area_purchase_game_wrapper")][1]')
-            platform_xpath_list = purchase_game_wrapper.xpath('.//span[contains(@class,"platform_img")]/@class').extract()
-            platforms = []
-            for platform_item in platform_xpath_list:
-                platforms.append(platform_item.split(' ')[1])
-
-            item['platforms'] = ','.join(platforms)
-
-            # 这里会有倒计时,现在有问题
-            if (len(purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]')) > 0):
-                item['discount_countdown'] = purchase_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]/text()').extract_first()
-            else:
-                item['discount_countdown'] = '0'
-
-            xpath_final_price = purchase_game_wrapper.xpath('.//div[@class="discount_block game_purchase_discount"]/@data-price-final')
-            if (len(xpath_final_price) > 0):
-                item['final_price'] = xpath_final_price.extract_first()
-            else:
-                item['final_price'] = '0'
-
-            xpath_discount_pct = purchase_game_wrapper.xpath('.//div[@class="game_purchase_discount"]/div[@class="discount_pct"]')
-
-            if (len(xpath_discount_pct) > 0):
-                item['discount'] = float(str(purchase_game_wrapper.xpath('.//div[@class="discount_pct"]/text()').extract_first()).strip('%'))
-            else:
-                item['discount'] = '0'
-
-            if (len(purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]')) > 0):
-                origin_price = purchase_game_wrapper.xpath('.//div[@class="discount_original_price"]/text()').extract_first().split(' ')[1]
-                item['origin_price'] = int(origin_price) * 100
-            else:
-                item['origin_price'] = '0'
-
-            # if '958260' in response.url:
-            #     print('======error key value===',item)
-            #     return
             yield item
 
-
-    def error_parse(self, faiture):
-        request = faiture.request
-        log('error_parse url:%s meta:%s' % (request.url, request.meta))
-
+    # 解析礼品包
     def parse_sub(self,response):
         pass
 
-    def mySpiderCloseHandle(self):
-        try:
-            self.browser.quit()
-        except Exception as e:
-            pass
+    def parse_error(self, error):
+        request = error.request
+        log('error_parse url:%s meta:%s' % (request.url, request.meta))
+
+    def get_id(self, url):
+        app_type = ''
+        if '/sub/' in url:
+            # 礼包
+            pattern = re.compile('/sub/(\d+)/',re.S)
+            app_type = 'subs'
+        elif '/app/' in url:
+            # app
+            pattern = re.compile('/app/(\d+)/', re.S)
+            app_type = 'app'
+        elif '/bundle/' in url:
+            # 捆绑包
+            pattern = re.compile('/bundle/(\d+)/', re.S)
+            app_type = 'bundle'
+        else:
+            pattern = re.compile('/(\d+)/', re.S)
+            app_type = 'other'
+            log('get_id other url:%s' % url)
+
+        id = re.search(pattern, url)
+        if id:
+            id = id.group(1)
+            return id, app_type
+
+        log('get_id error url:%s' % url)
+        return 0, 'error'
