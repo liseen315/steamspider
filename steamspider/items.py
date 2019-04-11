@@ -16,35 +16,38 @@ class TagsItem(scrapy.Item):
     tag_value = scrapy.Field()
 
 
-class TopSellersItem(scrapy.Item):
+class AppDetailItem(scrapy.Item):
     app_id = scrapy.Field()
-    thumb_url = scrapy.Field()
-    tagids = scrapy.Field()
     name = scrapy.Field()
+    c_name = scrapy.Field()
     released = scrapy.Field()
+    platforms = scrapy.Field()
+    origin_price = scrapy.Field()
     discount = scrapy.Field()
+    discount_countdown = scrapy.Field()
     final_price = scrapy.Field()
-
-class PopularNewsItem(TopSellersItem):
-    pass
-
-
-class AppDetailItem(TopSellersItem):
+    game_area_metascore = scrapy.Field()
+    tagids = scrapy.Field()
+    popular_tags = scrapy.Field()
+    developers = scrapy.Field()
+    thumb_url = scrapy.Field()
+    origin_url = scrapy.Field()
     short_des = scrapy.Field()
     full_des = scrapy.Field()
     highlight_movie = scrapy.Field()
     screenshot = scrapy.Field()
-    developers = scrapy.Field()
-    popular_tags = scrapy.Field()
-    game_area_metascore = scrapy.Field()
-    platforms = scrapy.Field()
-    # 降价截至日期
-    discount_countdown = scrapy.Field()
-    origin_price = scrapy.Field()
-    origin_uri = scrapy.Field()
 
 
-class Tag(Model):
+
+class TopSellersItem(AppDetailItem):
+    pass
+
+
+class PopularNewsItem(AppDetailItem):
+    pass
+
+
+class TagModel(Model):
     tag_name = CharField(verbose_name='标签名称')
     tag_value = IntegerField(verbose_name='标签值')
 
@@ -52,33 +55,41 @@ class Tag(Model):
         database = db
 
 
-class TopSellers(Model):
-    app_id = CharField(verbose_name='app唯一id', null=False, unique=True)
-    name = CharField(verbose_name='app名称', null=False)
-    c_name = CharField(verbose_name='app中文名', null=True)
-    thumb_url = CharField(verbose_name='封面url', null=True)
-    tagids = CharField(verbose_name='标签')
-    released = CharField(verbose_name='发布日期', null=False)
-    discount = CharField(verbose_name='降价百分比', null=False, default='0')
-    final_price = CharField(verbose_name='最终价格', null=False, default='0')
+class AppDetailModel(Model):
+    app_id = CharField(verbose_name='app唯一id', unique=True, index=True)
+    name = CharField(verbose_name='app名称')
+    c_name = CharField(verbose_name='app中文名', default='')
+    released = CharField(verbose_name='发布日期', default='')
+    platforms = CharField(verbose_name='平台', default='')
+
+    # tagids = CharField(verbose_name='标签分类',null=True)
+    # popular_tags = CharField(verbose_name='热门标签', null=True)
+    # developers = CharField(verbose_name='开发商', null=True)
+    # metascore = IntegerField(verbose_name='meta评分', default=0)
+    # origin_price = IntegerField(verbose_name='原始价格', default=0)
+    # discount = CharField(verbose_name='降价百分比', null=True)
+    #
+    # thumb_url = CharField(verbose_name='封面url', null=False)
+    # origin_url = CharField(verbose_name='详情url', null=False)
+    #
+    # short_des = TextField(verbose_name='简短描述', null=True)
+    # full_des = TextField(verbose_name='详细描述', null=True)
+    # highlight_movie = CharField(verbose_name='焦点图视频',null=True)
+    # screenshot = TextField(verbose_name='焦点图地址列表',null=True)
+    #
+    #
+    # metascore = IntegerField(verbose_name='meta评分',default=0)
+    # discount = CharField(verbose_name='降价百分比', null=True)
+    # discount_countdown = IntegerField(verbose_name='降价截至时间', default=0)
+    # final_price = CharField(verbose_name='最终价格', null=True)
 
     class Meta:
         database = db
 
 
-class PopularNews(TopSellers):
+class TopSellers(AppDetailModel):
     pass
 
 
-class AppDetail(TopSellers):
-    short_des = TextField(verbose_name='简短描述',null=True)
-    full_des = TextField(verbose_name='描述', null=True)
-    highlight_movie = CharField(verbose_name='焦点图视频')
-    screenshot = TextField(verbose_name='焦点图地址列表')
-    developers = CharField(verbose_name='开发商')
-    popular_tags = CharField(verbose_name='热门标签')
-    game_area_metascore = CharField(verbose_name='meta评分')
-    platforms = CharField(verbose_name='平台',null=False,default='')
-    discount_countdown = CharField(verbose_name='降价截至日期', null=False, default='0')
-    origin_price = CharField(verbose_name='原始价格', null=False, default='0')
-    origin_uri = CharField(verbose_name='app的网页路径',null=False)
+class PopularNews(AppDetailModel):
+    pass

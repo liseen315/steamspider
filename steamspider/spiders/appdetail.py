@@ -35,10 +35,11 @@ class AppDetailSpider(Spider):
 
         for app_item in applist:
             detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
-            # name = app_item.xpath('.//span[@class="title"]/text()').extract_first()
-            tag_xpath = app_item.xpath('@data-ds-tagids').extract_first()
-            tagids = tag_xpath[1:len(tag_xpath) - 1]
-            # released = app_item.xpath('.//div[contains(@class,"search_released")]/text()').extract_first()
+
+            xpath_tag = app_item.xpath('@data-ds-tagids')
+            if len(xpath_tag) > 0:
+                tagids = xpath_tag.extract_first()[1:len(tag_xpath) - 1]
+
             app_id = ''
             thumb_url = ''
             if (app_item.xpath('@data-ds-packageid').extract_first() is None):
@@ -50,21 +51,20 @@ class AppDetailSpider(Spider):
                 thumb_url = 'https://media.st.dl.bscstorage.net/steam/subs/{appid}/header_292x136.jpg'.format(
                     appid=app_item.xpath('@data-ds-packageid').extract_first())
 
-            # detail_url = 'https://store.steampowered.com/app/958260/DEAD_OR_ALIVE_Xtreme_Venus_Vacation/?snr=1_7_7_230_150_1&l=schinese'
-
             yield Request(url=detail_url,
                           callback=self.parse_detail,
                           errback=self.error_parse,
-                          cookies={'wants_mature_content': '1', "birthtime": "725817601",
+                          cookies={'wants_mature_content': '1',
+                                   "birthtime": "725817601",
                                    "lastagecheckage": "1-January-1993"},
                           meta={'app_id': app_id,
                                 'tagids': tagids,
                                 'thumb_url': thumb_url})
 
         self.current_pagenum += 1
-        if (self.current_pagenum < self.total_pagenum):
-            yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                          callback=self.parse_item,errback=self.error_parse)
+        # if (self.current_pagenum < self.total_pagenum):
+        #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
+        #                   callback=self.parse_item,errback=self.error_parse)
 
     def parse_detail(self, response):
 
@@ -78,15 +78,12 @@ class AppDetailSpider(Spider):
             item['thumb_url'] = response.meta['thumb_url']
             item['tagids'] = response.meta['tagids']
             item['origin_uri'] = response.url
-            item['name'] = response.xpath('//div[@class="apphub_AppIcon"]/text()').extract_first()
-            # if '958260' in response.url:
-            #     from scrapy.shell import inspect_response
-            #     inspect_response(response, self)
+            item['name'] = response.xpath('//div[@class="apphub_AppName"]/text()').extract_first()
 
             release = response.xpath('//div[@class="release_date"]')
 
             if len(release) > 0:
-                item['release'] = release.xpath('.//div[@class="date"]/text()').extract_first()
+                item['released'] = release.xpath('.//div[@class="date"]/text()').extract_first()
 
             des = response.xpath('//div[@id="game_area_description"]')
             if len(des) > 0 :
@@ -160,8 +157,9 @@ class AppDetailSpider(Spider):
             else:
                 item['origin_price'] = '0'
 
-
-            # print('===========response===',item)
+            # if '958260' in response.url:
+            #     print('======error key value===',item)
+            #     return
             yield item
 
 

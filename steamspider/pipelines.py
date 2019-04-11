@@ -16,49 +16,10 @@ class MySQLPipeline(object):
             , 'appdetail': self.option_detail}
 
     def option_topsellers(self, item):
-        if TopSellers.table_exists() == False:
-            TopSellers.create_table()
-
-        try:
-            target_app = TopSellers.get(TopSellers.app_id == item['app_id'])
-            if target_app.discount != item['discount']:
-                TopSellers.update(discount=item['discount']).where(TopSellers.app_id == item['app_id']).execute()
-
-            if target_app.final_price != item['final_price']:
-                TopSellers.update(final_price=item['final_price']).where(
-                    TopSellers.app_id == item['app_id']).execute()
-
-        except TopSellers.DoesNotExist:
-            TopSellers.create(app_id=item['app_id'],
-                              name=item['name'],
-                              thumb_url=item['thumb_url'],
-                              released=item['released'],
-                              discount=item['discount'],
-                              final_price=item['final_price'],
-                              origin_price=item['origin_price'])
+        pass
 
     def option_popularnew(self, item):
-        if PopularNews.table_exists() == False:
-            PopularNews.create_table()
-
-        try:
-            target_app = PopularNews.get(PopularNews.app_id == item['app_id'])
-
-            if target_app.discount != item['discount']:
-                PopularNews.update(discount=item['discount']).where(PopularNews.app_id == item['app_id']).execute()
-
-            if target_app.final_price != item['final_price']:
-                PopularNews.update(final_price=item['final_price']).where(
-                    PopularNews.app_id == item['app_id']).execute()
-
-        except PopularNews.DoesNotExist:
-            PopularNews.create(app_id=item['app_id'],
-                               name=item['name'],
-                               thumb_url=item['thumb_url'],
-                               released=item['released'],
-                               discount=item['discount'],
-                               final_price=item['final_price'],
-                               origin_price=item['origin_price'])
+        pass
 
     def option_apptags(self, item):
         if Tag.table_exists() == False:
@@ -85,21 +46,8 @@ class MySQLPipeline(object):
         except AppDetail.DoesNotExist:
             AppDetail.create(app_id=item['app_id'],
                              name=item['name'],
-                             tagids=item['tagids'],
                              released=item['released'],
-                             discount=item['discount'],
-                             final_price=item['final_price'],
-                             short_des=item['short_des'],
-                             full_des=item['full_des'],
-                             highlight_movie=item['highlight_movie'],
-                             screenshot=item['screenshot'],
-                             developers=item['developers'],
-                             popular_tags=item['popular_tags'],
-                             game_area_metascore=item['game_area_metascore'],
-                             platforms=item['platforms'],
-                             discount_countdown=item['discount_countdown'],
-                             origin_price=item['origin_price'],
-                             origin_uri=item['origin_uri']
+                             platforms=item['platforms']
                              )
 
     def process_item(self, item, spider):
