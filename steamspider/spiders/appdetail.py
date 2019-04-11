@@ -166,6 +166,25 @@ class AppDetailSpider(Spider):
                 del_title_html = re.sub(r'<h2>关于这款游戏*</h2>','',full_html)
                 item['full_des'] = del_title_html.strip()
 
+            # 焦点图视频
+            xpath_highlight_movie = response.xpath('//div[contains(@id,"highlight_movie_")]')
+            if len(xpath_highlight_movie) > 0:
+                # 轮播视频
+                item['highlight_movie'] = response.xpath('//div[contains(@id,"highlight_movie_")]')[0].xpath(
+                    '@data-mp4-source').extract_first()
+
+            # 轮播图
+            screen_path_list = response.xpath('//div[contains(@class,"highlight_screenshot")]/@id').extract()
+            screen_list = []
+
+            for sitem in screen_path_list:
+                conver_url = self.screenshot_path.format(appid=response.meta['app_id']) + sitem[
+                                                                                          len(
+                                                                                              'thumb_screenshot_'):len(
+                                                                                              sitem)]
+                screen_list.append(conver_url)
+            item['screenshot'] = ','.join(screen_list)
+
             yield item
 
     # 解析礼品包
