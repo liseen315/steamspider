@@ -8,7 +8,7 @@
 import scrapy
 from peewee import *
 
-db = MySQLDatabase("steam_vgfuns", host='127.0.0.1', port=3306, user='root', passwd='Liseen315song', charset='utf8')
+db = MySQLDatabase("steam_vgfuns", host='127.0.0.1', port=3306, user='root', passwd='Liseen315song', charset='utf8mb4')
 
 
 class TagsItem(scrapy.Item):
@@ -72,10 +72,10 @@ class AppDetailModel(Model):
     developers = CharField(verbose_name='开发商',default='')
     thumb_url = CharField(verbose_name='封面url',default='')
     origin_url = CharField(verbose_name='源url',default='')
-    short_des = CharField(verbose_name='简介',default='')
-    full_des = CharField(verbose_name='详情描述',default='')
-    highlight_movie = CharField(verbose_name='轮播图视频',default='')
-    screenshot = CharField(verbose_name='轮播图图片',default='')
+    short_des = TextField(verbose_name='简介',default='')
+    full_des = TextField(verbose_name='详情描述',default='')
+    highlight_movie = TextField(verbose_name='轮播图视频',default='')
+    screenshot = TextField(verbose_name='轮播图图片',default='')
 
     class Meta:
         table_name = 'app_detail'

@@ -3,6 +3,8 @@ from utils import log
 from steamspider.items import AppDetailItem
 import math
 import re
+import time
+import ast
 
 
 class AppDetailSpider(Spider):
@@ -42,8 +44,9 @@ class AppDetailSpider(Spider):
             if app_id and app_type is not 'error':
 
                 xpath_tag = app_item.xpath('@data-ds-tagids')
+                tagids = ''
                 if len(xpath_tag) > 0:
-                    tagids = xpath_tag.extract_first()[1:len(xpath_tag) - 1]
+                    tagids = xpath_tag.extract_first().strip('[').strip(']')
 
                 thumb_url = self.media_path.format(type=app_type,appid=app_id)
 
@@ -59,9 +62,9 @@ class AppDetailSpider(Spider):
                                     'thumb_url': thumb_url})
 
         self.current_pagenum += 1
-        # if (self.current_pagenum < self.total_pagenum):
-        #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-        #                   callback=self.parse_page,errback=self.error_parse)
+        if (self.current_pagenum < self.total_pagenum):
+            yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
+                          callback=self.parse_page,errback=self.parse_error)
 
     # 解析普通的app
     def parse_app(self,response):
@@ -80,10 +83,13 @@ class AppDetailSpider(Spider):
 
             # 获取预售大节点
             xpath_purchase = response.xpath('//div[@id="game_area_purchase"]')
+            # 获取不是dlc的节点
+            xpath_game_wrapper = xpath_purchase.xpath('.//div[@class="game_area_purchase_game_wrapper"]')
+
 
             # 支持平台
-            if len(xpath_purchase.xpath('.//div[@class="game_area_purchase_platform"]')) > 0:
-                xpath_platform_list = xpath_purchase.xpath('.//div[@class="game_area_purchase_platform"]')[0].xpath('.//span/@class').extract()
+            if len(xpath_game_wrapper.xpath('.//div[@class="game_area_purchase_platform"]')) > 0:
+                xpath_platform_list = xpath_game_wrapper.xpath('.//div[@class="game_area_purchase_platform"]')[0].xpath('.//span/@class').extract()
                 platforms = []
                 for platform_item in xpath_platform_list:
                     platforms.append(platform_item.split(' ')[1])
@@ -91,27 +97,74 @@ class AppDetailSpider(Spider):
                 item['platforms'] = ','.join(platforms)
 
             # 原始价格
-            xpath_original_price = xpath_purchase.xpath('.//div[@class="discount_original_price"]')
+            xpath_original_price = xpath_game_wrapper.xpath('.//div[@class="discount_original_price"]')
             if len(xpath_original_price) > 0:
                 origin_price = xpath_original_price[0].xpath('text()').extract_first().split(' ')[1]
                 item['origin_price'] = str(int(origin_price) * 100)
 
-            # 折扣
-            xpath_discount_pct = xpath_purchase.xpath('.//div[@class="discount_pct"]')
+            # 折扣 现在有可能
+            xpath_discount_pct = xpath_game_wrapper.xpath('.//div[@class="discount_pct"]')
             if len(xpath_discount_pct) > 0:
                 item['discount']=xpath_discount_pct[0].xpath('text()').extract_first().strip('%')
 
             # 折扣截至
-            xpath_discount_countdown = xpath_purchase.xpath('.//p[@class="game_purchase_discount_countdown"]')
+            xpath_discount_countdown = xpath_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]')
             if len(xpath_discount_countdown) > 0:
                 str_countdown = xpath_discount_countdown[0].xpath('text()').extract_first()
-                item['discount_countdown']= re.search('(\d+)月(\d+)日',str_countdown).group()
+
+                if re.search('(\d+)月(\d+)日',str_countdown):
+                    # item['discount_countdown'] = time.mktime(time.strptime(re.search('(\d+)月(\d+)日',str_countdown).group(),'%m月%d日'))
+                    item['discount_countdown'] = re.search('(\d+)月(\d+)日',str_countdown).group()
+                else:
+                    # 这里需要获取js的时间戳可能存在风险
+                    scriptstr = xpath_discount_countdown[0].xpath('../script/text()').extract_first()
+                    timeArray = time.localtime(int(re.search('\d{10}',scriptstr).group()))  # 秒数
+                    converTime = time.strftime("%m月%d日", timeArray)
+                    item['discount_countdown'] = converTime
 
 
             # 现价
-            xpath_final_price = xpath_purchase.xpath('.//@data-price-final')
+            xpath_final_price = xpath_game_wrapper.xpath('.//@data-price-final')
             if len(xpath_final_price) > 0:
                 item['final_price'] = xpath_final_price[0].extract()
+
+            # metascore评分
+            xpath_metascore = response.xpath('//div[@id="game_area_metascore"]')
+            if len(xpath_metascore) > 0:
+                item['metascore'] = xpath_metascore[0].xpath('.//div[contains(@class,"score")]/text()').extract_first().strip()
+
+            # tagids
+            item['tagids'] = response.meta['tagids']
+
+            # 热门标签
+            xpath_popular_tags = response.xpath('//div[contains(@class,"popular_tags_ctn")]')
+            if len(xpath_popular_tags) > 0:
+                xpath_taglist = xpath_popular_tags[0].xpath('.//div[contains(@class,"popular_tags")]/a/text()').extract()
+
+                popular_taglist = []
+                for poular_tag_item in xpath_taglist:
+                    popular_taglist.append(poular_tag_item.strip())
+
+                item['popular_tags'] = ','.join(popular_taglist)
+
+            # 开发者
+            xpath_devlopers = response.xpath('//div[contains(@id,"developers_list")]')
+            if len(xpath_devlopers) > 0:
+                item['developers'] = xpath_devlopers[0].xpath('.//a/text()').extract_first()
+
+            # 封面
+            item['thumb_url'] = response.meta['thumb_url']
+            # 源路径
+            item['origin_url'] = response.url
+            # 简介
+            item['short_des'] = response.xpath('//div[@class="game_description_snippet"]/text()').extract_first().strip()
+
+            # 详细介绍
+            xpath_full_des = response.xpath('//div[@id="game_area_description"]')
+            if len(xpath_full_des) > 0:
+                full_html = ''.join(response.xpath('//div[@id="game_area_description"]/node()').extract()).strip()
+                del_title_html = re.sub(r'<h2>关于这款游戏*</h2>','',full_html)
+                item['full_des'] = del_title_html.strip()
 
             yield item
 
