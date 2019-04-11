@@ -104,9 +104,9 @@ class AppDetailSpider(Spider):
             # 折扣截至
             xpath_discount_countdown = xpath_purchase.xpath('.//p[@class="game_purchase_discount_countdown"]')
             if len(xpath_discount_countdown) > 0:
-                pattern = re.compile('/(\d+)月(\d+)日/', re.S)
                 str_countdown = xpath_discount_countdown[0].xpath('text()').extract_first()
-                item['discount_countdown']= re.search(pattern,str_countdown).groups(1)
+                item['discount_countdown']= re.search('(\d+)月(\d+)日',str_countdown).group()
+
 
             # 现价
             xpath_final_price = xpath_purchase.xpath('.//@data-price-final')
