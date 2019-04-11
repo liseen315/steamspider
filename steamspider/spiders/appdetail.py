@@ -16,12 +16,13 @@ class AppDetailSpider(Spider):
         super(AppDetailSpider, self).__init__(*args, **kwargs)
 
         self.page_url = 'https://store.steampowered.com/search/results?search/&l=schinese&category1=10,998,21'
-        self.current_pagenum = 1
+        self.current_pagenum = 122
         self.total_apps = 0
         self.total_pagenum = 0
         self.search_url = '{url}&page={pagenum}'
+        self.screenshot_path = 'https://media.st.dl.bscstorage.net/steam/apps/{appid}/'
         self.media_path = 'https://media.st.dl.bscstorage.net/steam/{type}/{appid}/header_292x136.jpg'
-        self.parse_switch = {'app':self.parse_app,'subs':self.parse_sub}
+        self.parse_switch = {'app':self.parse_app,'subs':self.parse_sub,'bundle':self.parse_bundle,'other':self.parse_other}
 
     def start_requests(self):
         yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
@@ -189,7 +190,16 @@ class AppDetailSpider(Spider):
 
     # 解析礼品包
     def parse_sub(self,response):
-        pass
+        print('------这是礼包----------',response.url)
+
+    # 解析捆绑包
+    def parse_bundle(self,response):
+        print('------这是捆绑包--------',response.url)
+
+    # 解析其他类型的
+    def parse_other(self,response):
+        print('------这是其他类型的-----',response.url)
+
 
     def parse_error(self, error):
         request = error.request
