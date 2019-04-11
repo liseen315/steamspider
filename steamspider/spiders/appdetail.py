@@ -16,7 +16,7 @@ class AppDetailSpider(Spider):
         super(AppDetailSpider, self).__init__(*args, **kwargs)
 
         self.page_url = 'https://store.steampowered.com/search/results?search/&l=schinese&category1=10,998,21'
-        self.current_pagenum = 122
+        self.current_pagenum = 1
         self.total_apps = 0
         self.total_pagenum = 0
         self.search_url = '{url}&page={pagenum}'
@@ -29,9 +29,10 @@ class AppDetailSpider(Spider):
                       callback=self.parse_page)
 
     def parse_page(self, response):
-        total_pagestr = response.xpath('//div[@class="search_pagination_left"]/text()').extract_first().strip()
-        self.total_apps = int(total_pagestr[total_pagestr.rfind('共') + 1:total_pagestr.rfind('个')].strip())
-        self.total_pagenum = math.ceil(self.total_apps / 25)
+        if not self.total_apps and not self.total_pagenum:
+            total_pagestr = response.xpath('//div[@class="search_pagination_left"]/text()').extract_first().strip()
+            self.total_apps = int(total_pagestr[total_pagestr.rfind('共') + 1:total_pagestr.rfind('个')].strip())
+            self.total_pagenum = math.ceil(self.total_apps / 25)
 
         print('=======parse_page=====', self.total_apps, self.total_pagenum, self.current_pagenum)
 
