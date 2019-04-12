@@ -1,6 +1,6 @@
 from scrapy import Spider,Request
 from steamspider.items import OfferItem
-
+from steamspider.utils import get_id
 # 优惠
 class OfferSpider(Spider):
     name = 'offerapp'
@@ -28,7 +28,7 @@ class OfferSpider(Spider):
         applist = response.xpath('//a[contains(@class,"search_result_row")]')
         for app_item in applist:
             detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
-            app_id, app_type = self.get_id(detail_url)
+            app_id, app_type = get_id(detail_url)
 
             if app_id and app_type is not 'error':
                 item = OfferItem()
@@ -45,31 +45,3 @@ class OfferSpider(Spider):
     def parse_error(self, error):
         request = error.request
         self.logger.log('WARNING','error_parse url:%s meta:%s' % (request.url, request.meta))
-
-
-    # 这种通用的工具方法应该抽离走
-    def get_id(self, url):
-        app_type = ''
-        if '/sub/' in url:
-            # 礼包
-            pattern = re.compile('/sub/(\d+)/',re.S)
-            app_type = 'subs'
-        elif '/app/' in url:
-            # app
-            pattern = re.compile('/app/(\d+)/', re.S)
-            app_type = 'app'
-        elif '/bundle/' in url:
-            # 捆绑包
-            pattern = re.compile('/bundle/(\d+)/', re.S)
-            app_type = 'bundle'
-        else:
-            pattern = re.compile('/(\d+)/', re.S)
-            app_type = 'other'
-            self.logger.log('WARNING','get_id other url:%s' % url)
-
-        id = re.search(pattern, url)
-        if id:
-            id = id.group(1)
-            return id, app_type
-        self.logger.log('WARNING', 'get_id error url:%s' % url)
-        return 0, 'error'
