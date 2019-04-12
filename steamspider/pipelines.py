@@ -5,18 +5,29 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
-from .items import TagModel, AppDetailModel
+from .items import TagModel, AppDetailModel, PriceModel, OfferModel
 
 
 class MySQLPipeline(object):
 
     def __init__(self):
-        self.switch = {'topsellers': self.option_topsellers, 'poplularnew': self.option_popularnew,
+        self.switch = {'offerapp': self.option_offer, 'poplularnew': self.option_popularnew,
                        'apptags': self.option_apptags
             , 'appdetail': self.option_detail}
 
-    def option_topsellers(self, item):
-        pass
+    def option_offer(self, item):
+
+        # 现在没找到清空数据表不变字段的api.....
+        if OfferModel.table_exists() == True:
+            OfferModel.drop_table()
+            OfferModel.create_table()
+        else:
+            OfferModel.create_table()
+
+        try:
+            OfferModel.get(OfferModel.app_id == item['app_id'])
+        except OfferModel.DoesNotExist:
+            OfferModel.create(app_id=item['app_id'],app_type=item['app_type'])
 
     def option_popularnew(self, item):
         pass
@@ -34,6 +45,9 @@ class MySQLPipeline(object):
         if AppDetailModel.table_exists() == False:
             AppDetailModel.create_table()
 
+        if PriceModel.table_exists() == False:
+            PriceModel.create_table()
+
         try:
             target_app = AppDetailModel.get(AppDetailModel.app_id == item['app_id'])
 
@@ -43,6 +57,8 @@ class MySQLPipeline(object):
             if target_app.final_price != item['final_price']:
                 AppDetailModel.update(final_price=item['final_price']).where(
                     AppDetailModel.app_id == item['app_id']).execute()
+                # 最终价格不同的时候往价格表里存放新数据
+                PriceModel.create(app_id=item['app_id'], final_price=item['final_price'])
 
             if target_app.discount_countdown != item['discount_countdown']:
                 AppDetailModel.update(discount_countdown=item['discount_countdown']).where(
@@ -70,6 +86,8 @@ class MySQLPipeline(object):
                                   highlight_movie=item['highlight_movie'],
                                   screenshot=item['screenshot']
                                   )
+
+            PriceModel.create(app_id=item['app_id'], final_price=item['final_price'])
 
     def process_item(self, item, spider):
 

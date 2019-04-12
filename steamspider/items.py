@@ -46,12 +46,21 @@ class AppDetailItem(scrapy.Item):
             else:
                 self[keys] = value
 
+class PriceItem(scrapy.Item):
+    app_id = scrapy.Field()
+    final_price = scrapy.Field()
+
+class OfferItem(scrapy.Item):
+    app_id = scrapy.Field()
+    app_type = scrapy.Field()
+
 
 class TagModel(Model):
     tag_name = CharField(verbose_name='标签名称')
     tag_value = IntegerField(verbose_name='标签值')
 
     class Meta:
+        table_name = 'app_tags'
         database = db
 
 
@@ -79,4 +88,19 @@ class AppDetailModel(Model):
 
     class Meta:
         table_name = 'app_detail'
+        database = db
+
+class PriceModel(Model):
+    app_id = CharField(verbose_name='app唯一id', index=True)
+    final_price = CharField(verbose_name='最终价格', default='0')
+
+    class Meta:
+        table_name = 'app_price'
+        database = db
+
+class OfferModel(Model):
+    app_id = CharField(verbose_name='app唯一id', unique=True, index=True)
+    app_type = CharField(verbose_name='app类型')
+    class Meta:
+        table_name = 'offer_apps'
         database = db

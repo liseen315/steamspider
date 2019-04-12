@@ -5,11 +5,9 @@ import re
 import time
 import ast
 
-
+# 详情
 class AppDetailSpider(Spider):
     name = 'appdetail'
-    allowed_domains = ['store.steampowered.com']
-    handle_httpstatus_list = [301, 302]
 
     def __init__(self, *args, **kwargs):
         super(AppDetailSpider, self).__init__(*args, **kwargs)
@@ -191,6 +189,17 @@ class AppDetailSpider(Spider):
     # 解析礼品包
     def parse_sub(self,response):
         print('------这是礼包----------',response.url)
+        # if response.status in (200,):
+        #     item = AppDetailItem()
+        #     # 强行设置一堆默认空字符串
+        #     item.set_defalut('')
+        #
+        #     item['app_id'] = response.meta['app_id']
+        #     item['app_type'] = response.meta['app_type']
+        #     item['name'] = response.xpath('//div[@class="apphub_AppName"]/text()').extract_first()
+        #
+        #     yield item
+
 
     # 解析捆绑包
     def parse_bundle(self,response):
