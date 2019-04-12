@@ -1,5 +1,4 @@
 from scrapy import Spider, Request
-from utils import log
 from steamspider.items import AppDetailItem
 import math
 import re

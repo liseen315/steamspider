@@ -27,7 +27,7 @@ class MySQLPipeline(object):
             TagModel.create_table()
         try:
             TagModel.get(TagModel.tag_value == int(item['tag_value']))
-        except Tag.DoesNotExist:
+        except TagModel.DoesNotExist:
             TagModel.create(tag_name=item['tag_name'], tag_value=item['tag_value'])
 
     def option_detail(self, item):
