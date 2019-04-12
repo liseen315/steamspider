@@ -38,6 +38,7 @@ class AppDetailSpider(Spider):
         for app_item in applist:
 
             detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
+            # detail_url = 'https://store.steampowered.com/app/1012220/_The_Invisible_Guardian__610/?l=schinese'
             app_id, app_type = self.get_id(detail_url)
 
             if app_id and app_type is not 'error':
@@ -61,9 +62,9 @@ class AppDetailSpider(Spider):
                                     'thumb_url': thumb_url})
 
         self.current_pagenum += 1
-        if (self.current_pagenum < self.total_pagenum):
-            yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-                          callback=self.parse_page,errback=self.parse_error)
+        # if (self.current_pagenum <= self.total_pagenum):
+        #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
+        #                   callback=self.parse_page,errback=self.parse_error)
 
     # 解析普通的app
     def parse_app(self,response):
@@ -132,6 +133,15 @@ class AppDetailSpider(Spider):
             if len(xpath_metascore) > 0:
                 item['metascore'] = xpath_metascore[0].xpath('.//div[contains(@class,"score")]/text()').extract_first().strip()
 
+            # 是否支持中文
+            # item['support_cn'] = '0'
+
+            # dlc id列表
+            xpath_dlc = response.xpath('//a[contains(@class,"game_area_dlc_row")]')
+            if len(xpath_dlc) > 0:
+                xpath_dlcidlist = response.xpath('//a[contains(@class,"game_area_dlc_row")]/@data-ds-appid').extract()
+                item['dlc_list'] = ','.join(xpath_dlcidlist)
+
             # tagids
             item['tagids'] = response.meta['tagids']
 
@@ -151,6 +161,13 @@ class AppDetailSpider(Spider):
             if len(xpath_devlopers) > 0:
                 item['developers'] = xpath_devlopers[0].xpath('.//a/text()').extract_first()
 
+            # windows系统要求
+            xpath_sys_req = response.xpath('//div[contains(@class,"game_area_sys_req")][@data-os="win"]')
+            if len(xpath_sys_req) > 0:
+                sys_req_html = ''.join(response.xpath('//div[contains(@class,"game_area_sys_req")][@data-os="win"]/div/node()').extract()).strip()
+                item['sys_req'] = sys_req_html.strip()
+
+
             # 封面
             item['thumb_url'] = response.meta['thumb_url']
             # 源路径
@@ -163,6 +180,7 @@ class AppDetailSpider(Spider):
             if len(xpath_full_des) > 0:
                 full_html = ''.join(response.xpath('//div[@id="game_area_description"]/node()').extract()).strip()
                 del_title_html = re.sub(r'<h2>关于这款游戏*</h2>','',full_html)
+                del_title_html = re.sub(r'<h2>关于此内容*</h2>','',del_title_html)
                 item['full_des'] = del_title_html.strip()
 
             # 焦点图视频
