@@ -1,6 +1,7 @@
 from scrapy import Spider,Request
 from steamspider.items import OfferItem
 from steamspider.utils import get_id
+import math
 # 优惠
 class OfferSpider(Spider):
     name = 'offerapp'
@@ -23,7 +24,7 @@ class OfferSpider(Spider):
             self.total_apps = int(total_pagestr[total_pagestr.rfind('共') + 1:total_pagestr.rfind('个')].strip())
             self.total_pagenum = math.ceil(self.total_apps / 25)
 
-        print('=======parse_offer_page=====', self.total_apps, self.total_pagenum, self.current_pagenum)
+        # print('=======parse_offer_page=====', self.total_apps, self.total_pagenum, self.current_pagenum)
 
         applist = response.xpath('//a[contains(@class,"search_result_row")]')
         for app_item in applist:
@@ -34,10 +35,11 @@ class OfferSpider(Spider):
                 item = OfferItem()
                 item['app_id'] = app_id
                 item['app_type'] = app_type
+                item['origin_url'] = detail_url
                 yield item
 
         self.current_pagenum += 1
-        if (self.current_pagenum < self.total_pagenum):
+        if (self.current_pagenum <= self.total_pagenum):
             yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
                           callback=self.parse_page, errback=self.parse_error)
 

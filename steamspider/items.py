@@ -53,7 +53,7 @@ class PriceItem(scrapy.Item):
 class OfferItem(scrapy.Item):
     app_id = scrapy.Field()
     app_type = scrapy.Field()
-
+    origin_url = scrapy.Field()
 
 class TagModel(Model):
     tag_name = CharField(verbose_name='标签名称')
@@ -101,6 +101,7 @@ class PriceModel(Model):
 class OfferModel(Model):
     app_id = CharField(verbose_name='app唯一id', unique=True, index=True)
     app_type = CharField(verbose_name='app类型')
+    origin_url = CharField(verbose_name='源url', default='')
     class Meta:
         table_name = 'offer_apps'
         database = db

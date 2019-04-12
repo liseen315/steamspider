@@ -17,17 +17,18 @@ class MySQLPipeline(object):
 
     def option_offer(self, item):
 
-        # 现在没找到清空数据表不变字段的api.....
-        if OfferModel.table_exists() == True:
-            OfferModel.drop_table()
-            OfferModel.create_table()
-        else:
+        if OfferModel.table_exists() == False:
             OfferModel.create_table()
 
         try:
             OfferModel.get(OfferModel.app_id == item['app_id'])
         except OfferModel.DoesNotExist:
-            OfferModel.create(app_id=item['app_id'],app_type=item['app_type'])
+            OfferModel.create(app_id=item['app_id'],app_type=item['app_type'],origin_url=item['origin_url'])
+
+    def open_spider(self,spider):
+        if spider.name == 'offerapp':
+            if OfferModel.table_exists() == True:
+                OfferModel.drop_table()
 
     def option_popularnew(self, item):
         pass

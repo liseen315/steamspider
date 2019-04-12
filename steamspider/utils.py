@@ -1,4 +1,5 @@
-from scrapy.log import logger
+import logging
+import re
 
 # 根据url获取id跟类型
 def get_id(url):
@@ -18,11 +19,11 @@ def get_id(url):
     else:
         pattern = re.compile('/(\d+)/', re.S)
         app_type = 'other'
-        logger.log('WARNING','get_id other url:%s' % url)
+        logging.log('WARNING','get_id other url:%s' % url)
 
     id = re.search(pattern, url)
     if id:
         id = id.group(1)
         return id, app_type
-    logger.log('WARNING', 'get_id error url:%s' % url)
+    logging.log('WARNING', 'get_id error url:%s' % url)
     return 0, 'error'
