@@ -11,7 +11,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from scrapy.http import HtmlResponse
 from scrapy import signals
-from utils import log, get_platform
 import time
 
 

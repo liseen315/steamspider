@@ -37,12 +37,16 @@ class MySQLPipeline(object):
         try:
             target_app = AppDetailModel.get(AppDetailModel.app_id == item['app_id'])
 
-            # if target_app.discount != item['discount']:
-            #     AppDetail.update(discount=item['discount']).where(AppDetail.app_id == item['app_id']).execute()
-            #
-            # if target_app.final_price != item['final_price']:
-            #     AppDetail.update(final_price=item['final_price']).where(
-            #         AppDetail.app_id == item['app_id']).execute()
+            if target_app.discount != item['discount']:
+                AppDetailModel.update(discount=item['discount']).where(AppDetail.app_id == item['app_id']).execute()
+
+            if target_app.final_price != item['final_price']:
+                AppDetailModel.update(final_price=item['final_price']).where(
+                    AppDetailModel.app_id == item['app_id']).execute()
+
+            if target_app.discount_countdown != item['discount_countdown']:
+                AppDetailModel.update(discount_countdown=item['discount_countdown']).where(
+                    AppDetailModel.app_id == item['app_id']).execute()
 
         except AppDetailModel.DoesNotExist:
             # 经过验证如果给数据库一个不存在的item['xxx']会报error key value pipline 所以决定先小步迭代直到数据基本稳定

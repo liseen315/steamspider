@@ -115,4 +115,4 @@ LOAD_IMAGE = False               # 是否下载图片
 WINDOW_HEIGHT = 900             # 浏览器窗口大小
 WINDOW_WIDTH = 900
 
-LOG_LEVEL = 'ERROR'
+LOG_LEVEL = 'WARNING'

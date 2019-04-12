@@ -204,7 +204,7 @@ class AppDetailSpider(Spider):
 
     def parse_error(self, error):
         request = error.request
-        log('error_parse url:%s meta:%s' % (request.url, request.meta))
+        self.logger.log('WARNING','error_parse url:%s meta:%s' % (request.url, request.meta))
 
     def get_id(self, url):
         app_type = ''
@@ -223,12 +223,11 @@ class AppDetailSpider(Spider):
         else:
             pattern = re.compile('/(\d+)/', re.S)
             app_type = 'other'
-            log('get_id other url:%s' % url)
+            self.logger.log('WARNING','get_id other url:%s' % url)
 
         id = re.search(pattern, url)
         if id:
             id = id.group(1)
             return id, app_type
-
-        log('get_id error url:%s' % url)
+        self.logger.log('WARNING', 'get_id error url:%s' % url)
         return 0, 'error'
