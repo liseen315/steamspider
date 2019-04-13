@@ -12,7 +12,7 @@ class AppDetailSpider(Spider):
     def __init__(self, *args, **kwargs):
         super(AppDetailSpider, self).__init__(*args, **kwargs)
 
-        self.page_url = 'https://store.steampowered.com/search/results?search/&l=schinese&category1=10,998,21'
+        self.page_url = 'https://store.steampowered.com/search/results?search/&l=schinese&category1=998,21'
         self.current_pagenum = 1
         self.total_apps = 0
         self.total_pagenum = 0
@@ -206,7 +206,9 @@ class AppDetailSpider(Spider):
             # 源路径
             item['origin_url'] = response.url
             # 简介
-            item['short_des'] = response.xpath('//div[@class="game_description_snippet"]/text()').extract_first().strip()
+            xpath_description = response.xpath('//div[@class="game_description_snippet"]/text()')
+            if len(xpath_description) >0:
+                item['short_des'] = xpath_description.extract_first().strip()
 
             # 详细介绍
             xpath_full_des = response.xpath('//div[@id="game_area_description"]')
