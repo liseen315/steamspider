@@ -62,9 +62,9 @@ class AppDetailSpider(Spider):
                                     'thumb_url': thumb_url})
 
         self.current_pagenum += 1
-        # if (self.current_pagenum <= self.total_pagenum):
-        #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-        #                   callback=self.parse_page,errback=self.parse_error)
+        if (self.current_pagenum <= self.total_pagenum):
+            yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
+                          callback=self.parse_page,errback=self.parse_error)
 
     # 解析普通的app
     def parse_app(self,response):
@@ -84,57 +84,90 @@ class AppDetailSpider(Spider):
             # 获取预售大节点
             xpath_purchase = response.xpath('//div[@id="game_area_purchase"]')
             # 获取不是dlc的节点
-            xpath_game_wrapper = xpath_purchase.xpath('.//div[@class="game_area_purchase_game_wrapper"]')
+            xpath_game_wrapper = xpath_purchase.xpath('.//div[contains(@class,"game_area_purchase_game")]')
+
+            if len(xpath_game_wrapper) > 0:
+                item['status'] = '0'
+                # 支持平台
+                if len(xpath_game_wrapper[0].xpath('.//div[@class="game_area_purchase_platform"]')) > 0:
+                    xpath_platform_list = xpath_game_wrapper[0].xpath('.//div[@class="game_area_purchase_platform"]')[0].xpath('.//span/@class').extract()
+                    platforms = []
+                    for platform_item in xpath_platform_list:
+                        platforms.append(platform_item.split(' ')[1])
+
+                    item['platforms'] = ','.join(platforms)
+
+                # 原始价格
+                xpath_original_price = xpath_game_wrapper[0].xpath('.//div[@class="discount_original_price"]')
+                if len(xpath_original_price) > 0:
+                    origin_price = xpath_original_price[0].xpath('text()').extract_first().split(' ')[1]
+                    item['origin_price'] = str(int(origin_price) * 100)
+
+                # 折扣
+                xpath_discount_pct = xpath_game_wrapper[0].xpath('.//div[@class="discount_pct"]')
+                if len(xpath_discount_pct) > 0:
+                    item['discount']=xpath_discount_pct[0].xpath('text()').extract_first().strip('%')
+
+                # 折扣截至
+                xpath_discount_countdown = xpath_game_wrapper[0].xpath('.//p[@class="game_purchase_discount_countdown"]')
+                if len(xpath_discount_countdown) > 0:
+                    str_countdown = xpath_discount_countdown[0].xpath('text()').extract_first()
+
+                    if re.search('(\d+)月(\d+)日',str_countdown):
+                        # item['discount_countdown'] = time.mktime(time.strptime(re.search('(\d+)月(\d+)日',str_countdown).group(),'%m月%d日'))
+                        item['discount_countdown'] = re.search('(\d+)月(\d+)日',str_countdown).group()
+                    else:
+                        # 这里需要获取js的时间戳可能存在风险
+                        scriptstr = xpath_discount_countdown[0].xpath('../script/text()').extract_first()
+                        timeArray = time.localtime(int(re.search('\d{10}',scriptstr).group()))  # 秒数
+                        converTime = time.strftime("%m月%d日", timeArray)
+                        item['discount_countdown'] = converTime
 
 
-            # 支持平台
-            if len(xpath_game_wrapper.xpath('.//div[@class="game_area_purchase_platform"]')) > 0:
-                xpath_platform_list = xpath_game_wrapper.xpath('.//div[@class="game_area_purchase_platform"]')[0].xpath('.//span/@class').extract()
-                platforms = []
-                for platform_item in xpath_platform_list:
-                    platforms.append(platform_item.split(' ')[1])
+                # 现价
+                xpath_final_price = xpath_game_wrapper[0].xpath('.//@data-price-final')
+                if len(xpath_final_price) > 0:
+                    item['final_price'] = xpath_final_price[0].extract()
 
-                item['platforms'] = ','.join(platforms)
-
-            # 原始价格
-            xpath_original_price = xpath_game_wrapper.xpath('.//div[@class="discount_original_price"]')
-            if len(xpath_original_price) > 0:
-                origin_price = xpath_original_price[0].xpath('text()').extract_first().split(' ')[1]
-                item['origin_price'] = str(int(origin_price) * 100)
-
-            # 折扣 现在有可能
-            xpath_discount_pct = xpath_game_wrapper.xpath('.//div[@class="discount_pct"]')
-            if len(xpath_discount_pct) > 0:
-                item['discount']=xpath_discount_pct[0].xpath('text()').extract_first().strip('%')
-
-            # 折扣截至
-            xpath_discount_countdown = xpath_game_wrapper.xpath('.//p[@class="game_purchase_discount_countdown"]')
-            if len(xpath_discount_countdown) > 0:
-                str_countdown = xpath_discount_countdown[0].xpath('text()').extract_first()
-
-                if re.search('(\d+)月(\d+)日',str_countdown):
-                    # item['discount_countdown'] = time.mktime(time.strptime(re.search('(\d+)月(\d+)日',str_countdown).group(),'%m月%d日'))
-                    item['discount_countdown'] = re.search('(\d+)月(\d+)日',str_countdown).group()
+                # 如果没有折扣就把现价设置成原始价格 这里不能强制类型转换因为还有订阅计划类的
+                if item['discount'] == '0':
+                    item['origin_price'] = item['final_price']
+            else:
+                iscomingsoon = xpath_purchase.xpath('.//div[contains(@class,"game_area_comingsoon")]')
+                if len(iscomingsoon) > 0:
+                    item['status'] = '1'
                 else:
-                    # 这里需要获取js的时间戳可能存在风险
-                    scriptstr = xpath_discount_countdown[0].xpath('../script/text()').extract_first()
-                    timeArray = time.localtime(int(re.search('\d{10}',scriptstr).group()))  # 秒数
-                    converTime = time.strftime("%m月%d日", timeArray)
-                    item['discount_countdown'] = converTime
-
-
-            # 现价
-            xpath_final_price = xpath_game_wrapper.xpath('.//@data-price-final')
-            if len(xpath_final_price) > 0:
-                item['final_price'] = xpath_final_price[0].extract()
+                    item['status'] = '2'
+                print('-----即将推出或者是已经不再销售的----',response.url)
 
             # metascore评分
             xpath_metascore = response.xpath('//div[@id="game_area_metascore"]')
             if len(xpath_metascore) > 0:
                 item['metascore'] = xpath_metascore[0].xpath('.//div[contains(@class,"score")]/text()').extract_first().strip()
 
-            # 是否支持中文
-            # item['support_cn'] = '0'
+            # 是否支持中文 界面 音频 字母
+            lang_support_list = ['0','0','0']
+            xpath_language = response.xpath('//table[@class="game_language_options"]')
+            if len(xpath_language) > 0:
+                ui = xpath_language.xpath('./tr[2]/td[2]/span').extract()
+                audio = xpath_language.xpath('./tr[2]/td[3]/span').extract()
+                subtitle = xpath_language.xpath('./tr[2]/td[4]/span').extract()
+                if len(ui) > 0:
+                    lang_support_list[0] = '1'
+                if len(audio) > 0:
+                    lang_support_list[1] = '1'
+                if len(subtitle) > 0:
+                    lang_support_list[2] = '1'
+
+            item['support_cn'] = ','.join(lang_support_list)
+
+            # 相关推荐列表
+            xpath_recommended_list = response.xpath('//div[@id="recommended_block"]')
+            if len(xpath_recommended_list) > 0:
+                # 正则匹配js内的推荐列表
+                recommendstr = re.search(r'RenderMoreLikeThisBlock\(\s*\[.*\]\s*\)',response.xpath('//*').extract_first()).group()
+                recommendstr = recommendstr.replace('RenderMoreLikeThisBlock(','').replace(')','').strip()
+                item['recommended_list']= recommendstr.replace('[','').replace(']','').replace('"','').strip()
 
             # dlc id列表
             xpath_dlc = response.xpath('//a[contains(@class,"game_area_dlc_row")]')
@@ -165,7 +198,7 @@ class AppDetailSpider(Spider):
             xpath_sys_req = response.xpath('//div[contains(@class,"game_area_sys_req")][@data-os="win"]')
             if len(xpath_sys_req) > 0:
                 sys_req_html = ''.join(response.xpath('//div[contains(@class,"game_area_sys_req")][@data-os="win"]/div/node()').extract()).strip()
-                item['sys_req'] = sys_req_html.strip()
+                item['sys_req'] = sys_req_html.replace('<ul>','').replace('</ul>','').strip()
 
 
             # 封面

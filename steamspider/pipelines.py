@@ -23,9 +23,9 @@ class MySQLPipeline(object):
         try:
             OfferModel.get(OfferModel.app_id == item['app_id'])
         except OfferModel.DoesNotExist:
-            OfferModel.create(app_id=item['app_id'],app_type=item['app_type'],origin_url=item['origin_url'])
+            OfferModel.create(app_id=item['app_id'], app_type=item['app_type'], origin_url=item['origin_url'])
 
-    def open_spider(self,spider):
+    def open_spider(self, spider):
         if spider.name == 'offerapp':
             if OfferModel.table_exists() == True:
                 OfferModel.drop_table()
@@ -53,13 +53,18 @@ class MySQLPipeline(object):
             target_app = AppDetailModel.get(AppDetailModel.app_id == item['app_id'])
 
             if target_app.discount != item['discount']:
-                AppDetailModel.update(discount=item['discount']).where(AppDetail.app_id == item['app_id']).execute()
+                AppDetailModel.update(discount=item['discount']).where(
+                    AppDetailModel.app_id == item['app_id']).execute()
 
             if target_app.final_price != item['final_price']:
                 AppDetailModel.update(final_price=item['final_price']).where(
                     AppDetailModel.app_id == item['app_id']).execute()
-                # 最终价格不同的时候往价格表里存放新数据
-                PriceModel.create(app_id=item['app_id'], final_price=item['final_price'])
+
+                # 最终价格不同的时候往价格表里存放新数据保证是在售的app.并且之前价格表里不存在冗余数据
+                if item['status'] == '0' and len(PriceModel.select().where(PriceModel.app_id == item['app_id'],
+                                                                           PriceModel.final_price == item[
+                                                                               'final_price'])) <= 0:
+                    PriceModel.create(app_id=item['app_id'], final_price=item['final_price'])
 
             if target_app.discount_countdown != item['discount_countdown']:
                 AppDetailModel.update(discount_countdown=item['discount_countdown']).where(
@@ -69,6 +74,7 @@ class MySQLPipeline(object):
             # 经过验证如果给数据库一个不存在的item['xxx']会报error key value pipline 所以决定先小步迭代直到数据基本稳定
             AppDetailModel.create(app_id=item['app_id'],
                                   app_type=item['app_type'],
+                                  status=item['status'],
                                   name=item['name'],
                                   released=item['released'],
                                   platforms=item['platforms'],
@@ -78,6 +84,7 @@ class MySQLPipeline(object):
                                   final_price=item['final_price'],
                                   metascore=item['metascore'],
                                   support_cn=item['support_cn'],
+                                  recommended_list=item['recommended_list'],
                                   dlc_list=item['dlc_list'],
                                   tagids=item['tagids'],
                                   popular_tags=item['popular_tags'],
@@ -90,8 +97,11 @@ class MySQLPipeline(object):
                                   highlight_movie=item['highlight_movie'],
                                   screenshot=item['screenshot']
                                   )
-
-            PriceModel.create(app_id=item['app_id'], final_price=item['final_price'])
+            # 这个地方得改造一下 只有在售的才会存储价格
+            if item['status'] == '0' and len(PriceModel.select().where(PriceModel.app_id == item['app_id'],
+                                                                       PriceModel.final_price == item[
+                                                                           'final_price'])) <= 0:
+                PriceModel.create(app_id=item['app_id'], final_price=item['final_price'])
 
     def process_item(self, item, spider):
 

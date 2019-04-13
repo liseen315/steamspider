@@ -19,6 +19,7 @@ class TagsItem(scrapy.Item):
 class AppDetailItem(scrapy.Item):
     app_id = scrapy.Field()
     app_type = scrapy.Field()
+    status = scrapy.Field() # 0在售|1即将推出2|停止销售
     name = scrapy.Field()
     c_name = scrapy.Field()
     released = scrapy.Field()
@@ -29,6 +30,7 @@ class AppDetailItem(scrapy.Item):
     final_price = scrapy.Field()
     metascore = scrapy.Field()
     support_cn = scrapy.Field()
+    recommended_list = scrapy.Field()
     dlc_list = scrapy.Field()
     tagids = scrapy.Field()
     popular_tags = scrapy.Field()
@@ -70,6 +72,7 @@ class TagModel(Model):
 class AppDetailModel(Model):
     app_id = CharField(verbose_name='app唯一id', unique=True, index=True)
     app_type = CharField(verbose_name='app类型')
+    status = CharField(verbose_name='当前销售状态',default='0')
     name = CharField(verbose_name='app名称')
     c_name = CharField(verbose_name='app中文名',default='')
     released = CharField(verbose_name='发布日期')
@@ -79,7 +82,8 @@ class AppDetailModel(Model):
     discount_countdown = CharField(verbose_name='降价截至时间', default='0')
     final_price = CharField(verbose_name='最终价格', default='0')
     metascore = CharField(verbose_name='meta评分', default='0')
-    support_cn = CharField(verbose_name='是否支持中文',default='0')
+    support_cn = CharField(verbose_name='是否支持中文',default='')
+    recommended_list = CharField(verbose_name='相关推荐',default='')
     dlc_list = TextField(verbose_name='dlc列表',default='')
     tagids = CharField(verbose_name='标签分类',default='')
     popular_tags = CharField(verbose_name='热门标签分类',default='')
