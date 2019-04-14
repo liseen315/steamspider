@@ -5,7 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
-from .items import TagModel, AppDetailModel, PriceModel, OfferModel
+from .items import TagModel, AppDetailModel, PriceModel, OfferModel,PopularModel
 
 
 class MySQLPipeline(object):
@@ -27,11 +27,21 @@ class MySQLPipeline(object):
 
     def open_spider(self, spider):
         if spider.name == 'offerapp':
-            if OfferModel.table_exists() == True:
+            if OfferModel.table_exists():
                 OfferModel.drop_table()
 
+        if spider.name == 'poplularnew':
+            if PopularModel.table_exists():
+                PopularModel.drop_table()
+
     def option_popularnew(self, item):
-        pass
+        if PopularModel.table_exists() == False:
+            PopularModel.create_table()
+
+        try:
+            PopularModel.get(PopularModel.app_id == item['app_id'])
+        except PopularModel.DoesNotExist:
+            PopularModel.create(app_id=item['app_id'], app_type=item['app_type'], origin_url=item['origin_url'])
 
     def option_apptags(self, item):
 

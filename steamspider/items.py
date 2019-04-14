@@ -60,6 +60,9 @@ class OfferItem(scrapy.Item):
     app_type = scrapy.Field()
     origin_url = scrapy.Field()
 
+class PopularNewItem(OfferItem):
+    pass
+
 class TagModel(Model):
     tag_name = CharField(verbose_name='标签名称')
     tag_value = IntegerField(verbose_name='标签值')
@@ -115,3 +118,13 @@ class OfferModel(Model):
     class Meta:
         table_name = 'offer_apps'
         database = db
+
+class PopularModel(OfferModel):
+    app_id = CharField(verbose_name='app唯一id', unique=True, index=True)
+    app_type = CharField(verbose_name='app类型')
+    origin_url = CharField(verbose_name='源url', default='')
+
+    class Meta:
+        table_name = 'popularnew'
+        database = db
+
