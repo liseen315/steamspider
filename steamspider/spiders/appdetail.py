@@ -75,7 +75,10 @@ class AppDetailSpider(Spider):
 
             item['app_id'] = response.meta['app_id']
             item['app_type'] = response.meta['app_type']
-            item['name'] = response.xpath('//div[@class="apphub_AppName"]/text()').extract_first()
+            xpath_appname =  response.xpath('//div[@class="apphub_AppName"]/text()')
+            if len(xpath_appname) > 0:
+                item['name'] = xpath_appname.extract_first()
+
             # 发行日期
             release = response.xpath('//div[@class="release_date"]')
             if len(release) > 0:
@@ -241,7 +244,7 @@ class AppDetailSpider(Spider):
 
     # 解析礼品包
     def parse_sub(self,response):
-        print('------这是礼包----------',response.url)
+        print('------这是礼包--暂时不解析--------',response.url)
         # if response.status in (200,):
         #     item = AppDetailItem()
         #     # 强行设置一堆默认空字符串
@@ -249,7 +252,11 @@ class AppDetailSpider(Spider):
         #
         #     item['app_id'] = response.meta['app_id']
         #     item['app_type'] = response.meta['app_type']
-        #     item['name'] = response.xpath('//div[@class="apphub_AppName"]/text()').extract_first()
+        #     xpath_name = response.xpath('//div[@class="pageheader"]/text()')
+        #     if len(xpath_name) >0:
+        #         item['name'] = xpath_name.extract_first()
+        #
+        #     xpath_release = response.xpath('//div')
         #
         #     yield item
 

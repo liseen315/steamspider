@@ -24,8 +24,6 @@ class OfferSpider(Spider):
             self.total_apps = int(total_pagestr[total_pagestr.rfind('共') + 1:total_pagestr.rfind('个')].strip())
             self.total_pagenum = math.ceil(self.total_apps / 25)
 
-        # print('=======parse_offer_page=====', self.total_apps, self.total_pagenum, self.current_pagenum)
-
         applist = response.xpath('//a[contains(@class,"search_result_row")]')
         for app_item in applist:
             detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
