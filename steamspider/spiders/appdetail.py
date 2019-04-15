@@ -13,7 +13,7 @@ class AppDetailSpider(Spider):
         super(AppDetailSpider, self).__init__(*args, **kwargs)
 
         self.page_url = 'https://store.steampowered.com/search/results?search/&l=schinese&category1=998,21'
-        self.current_pagenum = 1
+        self.current_pagenum = 1056
         self.total_apps = 0
         self.total_pagenum = 0
         self.search_url = '{url}&page={pagenum}'
