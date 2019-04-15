@@ -108,11 +108,11 @@ SCHEDULER_PERSIST = True
 
 SCHEDULER_FLUSH_ON_START = True
 
-
-# ----------- selenium 参数配置 -------------
-SELENIUM_TIMEOUT = 25           # selenium浏览器的超时时间，单位秒
-LOAD_IMAGE = False               # 是否下载图片
-WINDOW_HEIGHT = 900             # 浏览器窗口大小
-WINDOW_WIDTH = 900
+#
+# # ----------- selenium 参数配置 -------------
+# SELENIUM_TIMEOUT = 25           # selenium浏览器的超时时间，单位秒
+# LOAD_IMAGE = False               # 是否下载图片
+# WINDOW_HEIGHT = 900             # 浏览器窗口大小
+# WINDOW_WIDTH = 900
 
 LOG_LEVEL = 'WARNING'

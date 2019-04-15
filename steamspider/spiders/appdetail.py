@@ -4,6 +4,7 @@ import math
 import re
 import time
 import ast
+import logging
 
 # 详情
 class AppDetailSpider(Spider):
@@ -32,6 +33,7 @@ class AppDetailSpider(Spider):
             self.total_pagenum = math.ceil(self.total_apps / 25)
 
         print('=======parse_page=====', self.total_apps, self.total_pagenum, self.current_pagenum)
+        # self.logger.log('', '==parsepage=== total_apps:%s total_pagenum:%s current_page:%s' % (self.total_apps, self.total_pagenum, self.current_pagenum))
 
         applist = response.xpath('//a[contains(@class,"search_result_row")]')
 
@@ -141,6 +143,7 @@ class AppDetailSpider(Spider):
                     item['status'] = '1'
                 else:
                     item['status'] = '2'
+                # self.logger.log(10, 'appstatus current_page:%s' % (response.url))
                 print('-----即将推出或者是已经不再销售的----',response.url)
 
             # metascore评分
@@ -291,11 +294,11 @@ class AppDetailSpider(Spider):
         else:
             pattern = re.compile('/(\d+)/', re.S)
             app_type = 'other'
-            self.logger.log('WARNING','get_id other url:%s' % url)
+            logging.warning('get_id other url:%s' % url)
 
         id = re.search(pattern, url)
         if id:
             id = id.group(1)
             return id, app_type
-        self.logger.log('WARNING', 'get_id error url:%s' % url)
+        logging.warning('get_id error url:%s' % url)
         return 0, 'error'

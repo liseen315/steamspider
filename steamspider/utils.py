@@ -6,7 +6,7 @@ def get_id(url):
     app_type = ''
     if '/sub/' in url:
         # 礼包
-        pattern = re.compile('/sub/(\d+)/',re.S)
+        pattern = re.compile('/sub/(\d+)/', re.S)
         app_type = 'subs'
     elif '/app/' in url:
         # app
@@ -19,11 +19,11 @@ def get_id(url):
     else:
         pattern = re.compile('/(\d+)/', re.S)
         app_type = 'other'
-        logging.log('WARNING','get_id other url:%s' % url)
+        logging.warning('get_id other url:%s' % url)
 
     id = re.search(pattern, url)
     if id:
         id = id.group(1)
         return id, app_type
-    logging.log('WARNING', 'get_id error url:%s' % url)
+    logging.warning('get_id error url:%s' % url)
     return 0, 'error'

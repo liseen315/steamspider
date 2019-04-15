@@ -2,6 +2,7 @@ from scrapy import Spider,Request
 from steamspider.items import OfferItem
 from steamspider.utils import get_id
 import math
+import logging
 # 优惠
 class OfferSpider(Spider):
     name = 'offerapp'
@@ -44,4 +45,4 @@ class OfferSpider(Spider):
 
     def parse_error(self, error):
         request = error.request
-        self.logger.log('WARNING','error_parse url:%s meta:%s' % (request.url, request.meta))
+        logging.warning('error_parse url:%s meta:%s' % (request.url, request.meta))
