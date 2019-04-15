@@ -1,10 +1,12 @@
 from scrapy import Spider, Request
 from steamspider.items import AppDetailItem
+from steamspider.utils import get_id
 import math
 import re
 import time
 import ast
 import logging
+
 
 # 详情
 class AppDetailSpider(Spider):
@@ -14,7 +16,7 @@ class AppDetailSpider(Spider):
         super(AppDetailSpider, self).__init__(*args, **kwargs)
 
         self.page_url = 'https://store.steampowered.com/search/results?search/&l=schinese&category1=998,21'
-        self.current_pagenum = 1056
+        self.current_pagenum = 1
         self.total_apps = 0
         self.total_pagenum = 0
         self.search_url = '{url}&page={pagenum}'
@@ -32,8 +34,7 @@ class AppDetailSpider(Spider):
             self.total_apps = int(total_pagestr[total_pagestr.rfind('共') + 1:total_pagestr.rfind('个')].strip())
             self.total_pagenum = math.ceil(self.total_apps / 25)
 
-        print('=======parse_page=====', self.total_apps, self.total_pagenum, self.current_pagenum)
-        # self.logger.log('', '==parsepage=== total_apps:%s total_pagenum:%s current_page:%s' % (self.total_apps, self.total_pagenum, self.current_pagenum))
+        logging.info('appdetail total_apps: %s total_pagenum: %s current_page: %s' % (self.total_apps, self.total_pagenum, self.current_pagenum))
 
         applist = response.xpath('//a[contains(@class,"search_result_row")]')
 
@@ -41,7 +42,7 @@ class AppDetailSpider(Spider):
 
             detail_url = app_item.xpath('@href').extract_first() + '&l=schinese'
             # detail_url = 'https://store.steampowered.com/app/1012220/_The_Invisible_Guardian__610/?l=schinese'
-            app_id, app_type = self.get_id(detail_url)
+            app_id, app_type = get_id(detail_url)
 
             if app_id and app_type is not 'error':
 
@@ -143,8 +144,8 @@ class AppDetailSpider(Spider):
                     item['status'] = '1'
                 else:
                     item['status'] = '2'
-                # self.logger.log(10, 'appstatus current_page:%s' % (response.url))
-                print('-----即将推出或者是已经不再销售的----',response.url)
+
+                logging.info( 'appstatus current_page: %s' % (response.url))
 
             # metascore评分
             xpath_metascore = response.xpath('//div[@id="game_area_metascore"]')
@@ -266,39 +267,13 @@ class AppDetailSpider(Spider):
 
     # 解析捆绑包
     def parse_bundle(self,response):
-        print('------这是捆绑包--------',response.url)
+        logging.info('this is sub url:%s' % response.url)
 
     # 解析其他类型的
     def parse_other(self,response):
-        print('------这是其他类型的-----',response.url)
+        logging.info('this is others url:%s' % response.url)
 
 
     def parse_error(self, error):
         request = error.request
-        self.logger.log('WARNING','error_parse url:%s meta:%s' % (request.url, request.meta))
-
-    def get_id(self, url):
-        app_type = ''
-        if '/sub/' in url:
-            # 礼包
-            pattern = re.compile('/sub/(\d+)/',re.S)
-            app_type = 'subs'
-        elif '/app/' in url:
-            # app
-            pattern = re.compile('/app/(\d+)/', re.S)
-            app_type = 'app'
-        elif '/bundle/' in url:
-            # 捆绑包
-            pattern = re.compile('/bundle/(\d+)/', re.S)
-            app_type = 'bundle'
-        else:
-            pattern = re.compile('/(\d+)/', re.S)
-            app_type = 'other'
-            logging.warning('get_id other url:%s' % url)
-
-        id = re.search(pattern, url)
-        if id:
-            id = id.group(1)
-            return id, app_type
-        logging.warning('get_id error url:%s' % url)
-        return 0, 'error'
+        logging.info('error_parse url:%s meta:%s' % (request.url, request.meta))

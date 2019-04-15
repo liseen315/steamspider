@@ -115,4 +115,5 @@ SCHEDULER_FLUSH_ON_START = True
 # WINDOW_HEIGHT = 900             # 浏览器窗口大小
 # WINDOW_WIDTH = 900
 
-LOG_LEVEL = 'WARNING'
+# LOG_STDOUT = True  开启这个会导致部署出现找不到spider的bug
+LOG_LEVEL = 'INFO'

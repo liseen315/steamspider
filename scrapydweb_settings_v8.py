@@ -31,8 +31,8 @@ SCRAPYDWEB_PORT = 5000
 # The default is False, set it to True to enable basic auth for web UI.
 ENABLE_AUTH = False
 # In order to enable basic auth, both USERNAME and PASSWORD should be non-empty strings.
-USERNAME = ''
-PASSWORD = ''
+USERNAME = 'liseen'
+PASSWORD = 'Liseen315song'
 
 # The default is False, set it to True and add both CERTIFICATE_FILEPATH and PRIVATEKEY_FILEPATH
 # to run ScrapydWeb in HTTPS mode.
@@ -86,7 +86,7 @@ LOCAL_SCRAPYD_SERVER = '127.0.0.1:6800'
 # Check out this link to find out where the Scrapy logs are stored:
 # https://scrapyd.readthedocs.io/en/stable/config.html#logs-dir
 # e.g. 'C:/Users/username/logs/' or '/home/username/logs/'
-SCRAPYD_LOGS_DIR = '/Users/admin/liseen/steamspiderlog/'
+SCRAPYD_LOGS_DIR = ''
 
 # ScrapydWeb would try every extension in sequence to locate the Scrapy logfile.
 # The default is ['.log', '.log.gz', '.txt'].
@@ -100,7 +100,7 @@ SCRAPYD_LOG_EXTENSIONS = ['.log', '.log.gz', '.txt']
 # Note that you can run the LogParser service separately via command 'logparser' as you like.
 # Run 'logparser -h' to find out the config file of LogParser for more advanced settings.
 # Visit https://github.com/my8100/logparser for more info.
-ENABLE_LOGPARSER = True
+ENABLE_LOGPARSER = False
 
 # Whether to backup the stats json files locally after you visit the Stats page of a job
 # so that it is still accessible even if the original logfile has been deleted.
@@ -153,7 +153,7 @@ DAEMONSTATUS_REFRESH_INTERVAL = 10
 # https://www.alibabacloud.com/help/doc-detail/56130.htm
 
 # The default is False, set it to True to enable email notification.
-ENABLE_EMAIL = False
+ENABLE_EMAIL = True
 
 ########## smtp settings ##########
 SMTP_SERVER = ''
@@ -166,9 +166,9 @@ SMTP_OVER_SSL = False
 # SMTP_OVER_SSL = True
 
 # Config for https://mail.google.com
-# SMTP_SERVER = 'smtp.gmail.com'
-# SMTP_PORT = 587
-# SMTP_OVER_SSL = False
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+SMTP_OVER_SSL = False
 
 # Config for https://mail.qq.com/ using SSL
 # SMTP_SERVER = 'smtp.qq.com'
@@ -187,14 +187,14 @@ SMTP_CONNECTION_TIMEOUT = 10
 # Leave this option as '' to default to the FROM_ADDR option below; Otherwise, set it up
 # if your email service provider requires an username which is different from the FROM_ADDR option below to login.
 # e.g. 'username'
-EMAIL_USERNAME = ''
+EMAIL_USERNAME = 'liusong850315@gmail.com'
 # As for different email service provider, you might have to get an APP password (like Gmail)
 # or an authorization code (like QQ mail) and set it as the EMAIL_PASSWORD.
 # Check out links below to get more help:
 # https://stackoverflow.com/a/27515833/10517783 How to send an email with Gmail as the provider using Python?
 # https://stackoverflow.com/a/26053352/10517783 Python smtplib proxy support
 # e.g. 'password4gmail'
-EMAIL_PASSWORD = ''
+EMAIL_PASSWORD = 'liu315song'
 
 # e.g. 'username@gmail.com'
 FROM_ADDR = ''
@@ -224,7 +224,7 @@ ON_JOB_RUNNING_INTERVAL = 0
 
 # Trigger email notice when a job is finished.
 # The default is False, set it to True to enable this trigger.
-ON_JOB_FINISHED = False
+ON_JOB_FINISHED = True
 
 ########## advanced triggers ##########
 # - LOG_XXX_THRESHOLD:

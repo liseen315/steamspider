@@ -19,11 +19,11 @@ def get_id(url):
     else:
         pattern = re.compile('/(\d+)/', re.S)
         app_type = 'other'
-        logging.warning('get_id other url:%s' % url)
+        logging.info('get_id other url:%s' % url)
 
     id = re.search(pattern, url)
     if id:
         id = id.group(1)
         return id, app_type
-    logging.warning('get_id error url:%s' % url)
+    logging.info('get_id error url:%s' % url)
     return 0, 'error'
