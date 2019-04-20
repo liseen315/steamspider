@@ -7,10 +7,10 @@ verify_ssl = true
 
 [packages]
 scrapy-redis = "*"
-scrapy = "*"
 scrapy-fake-useragent = "*"
 peewee = "*"
 pymysql = "*"
+scrapy = "==1.5.1"
 
 [requires]
 python_version = "3.7"

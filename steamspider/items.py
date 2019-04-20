@@ -7,8 +7,9 @@
 
 import scrapy
 from peewee import *
+from datetime import datetime
 
-db = MySQLDatabase("steam_vgfuns", host='127.0.0.1', port=3306, user='root', passwd='Liseen315song', charset='utf8mb4')
+db = MySQLDatabase("steam_spiders", host='127.0.0.1', port=3306, user='root', passwd='Liseen315song', charset='utf8mb4')
 
 
 class TagsItem(scrapy.Item):
@@ -63,7 +64,12 @@ class OfferItem(scrapy.Item):
 class PopularNewItem(OfferItem):
     pass
 
-class TagModel(Model):
+
+class BaseModel(Model):
+    createdAt = DateTimeField(default=datetime.now())
+    updatedAt = DateTimeField(default=datetime.now())
+
+class TagModel(BaseModel):
     tag_name = CharField(verbose_name='标签名称')
     tag_value = IntegerField(verbose_name='标签值')
 
@@ -71,8 +77,7 @@ class TagModel(Model):
         table_name = 'app_tags'
         database = db
 
-
-class AppDetailModel(Model):
+class AppDetailModel(BaseModel):
     app_id = CharField(verbose_name='app唯一id', unique=True, index=True)
     app_type = CharField(verbose_name='app类型')
     status = CharField(verbose_name='当前销售状态',default='0')
@@ -103,7 +108,7 @@ class AppDetailModel(Model):
         table_name = 'app_detail'
         database = db
 
-class PriceModel(Model):
+class PriceModel(BaseModel):
     app_id = CharField(verbose_name='app唯一id', index=True)
     final_price = CharField(verbose_name='最终价格', default='0')
 
@@ -111,7 +116,7 @@ class PriceModel(Model):
         table_name = 'app_price'
         database = db
 
-class OfferModel(Model):
+class OfferModel(BaseModel):
     app_id = CharField(verbose_name='app唯一id', unique=True, index=True)
     app_type = CharField(verbose_name='app类型')
     origin_url = CharField(verbose_name='源url', default='')
@@ -119,7 +124,7 @@ class OfferModel(Model):
         table_name = 'offer_apps'
         database = db
 
-class PopularModel(OfferModel):
+class PopularModel(BaseModel):
     app_id = CharField(verbose_name='app唯一id', unique=True, index=True)
     app_type = CharField(verbose_name='app类型')
     origin_url = CharField(verbose_name='源url', default='')

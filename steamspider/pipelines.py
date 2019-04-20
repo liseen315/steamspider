@@ -6,7 +6,7 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 from .items import TagModel, AppDetailModel, PriceModel, OfferModel,PopularModel
-
+from datetime import datetime
 
 class MySQLPipeline(object):
 
@@ -63,12 +63,12 @@ class MySQLPipeline(object):
             target_app = AppDetailModel.get(AppDetailModel.app_id == item['app_id'])
 
             if target_app.discount != item['discount']:
-                AppDetailModel.update(discount=item['discount']).where(
-                    AppDetailModel.app_id == item['app_id']).execute()
+                target_app.discount = item['discount']
+                target_app.save()
 
             if target_app.final_price != item['final_price']:
-                AppDetailModel.update(final_price=item['final_price']).where(
-                    AppDetailModel.app_id == item['app_id']).execute()
+                target_app.final_price = item['final_price']
+                target_app.save()
 
                 # 最终价格不同的时候往价格表里存放新数据保证是在售的app.并且之前价格表里不存在冗余数据
                 if item['status'] == '0' and len(PriceModel.select().where(PriceModel.app_id == item['app_id'],
@@ -77,8 +77,11 @@ class MySQLPipeline(object):
                     PriceModel.create(app_id=item['app_id'], final_price=item['final_price'])
 
             if target_app.discount_countdown != item['discount_countdown']:
-                AppDetailModel.update(discount_countdown=item['discount_countdown']).where(
-                    AppDetailModel.app_id == item['app_id']).execute()
+                target_app.discount_countdown = item['discount_countdown']
+                target_app.save()
+
+            target_app.updatedAt = datetime.now()
+            target_app.save()
 
         except AppDetailModel.DoesNotExist:
             # 经过验证如果给数据库一个不存在的item['xxx']会报error key value pipline 所以决定先小步迭代直到数据基本稳定
