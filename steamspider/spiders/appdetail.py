@@ -65,9 +65,9 @@ class AppDetailSpider(Spider):
                                     'thumb_url': thumb_url})
 
         self.current_pagenum += 1
-        # if (self.current_pagenum <= self.total_pagenum):
-        #     yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
-        #                   callback=self.parse_page,errback=self.parse_error)
+        if (self.current_pagenum <= self.total_pagenum):
+            yield Request(url=self.search_url.format(url=self.page_url, pagenum=self.current_pagenum),
+                          callback=self.parse_page,errback=self.parse_error)
 
     # 解析普通的app
     def parse_app(self,response):
