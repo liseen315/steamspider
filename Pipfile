@@ -6,11 +6,11 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-scrapy-redis = "*"
 scrapy-fake-useragent = "*"
 peewee = "*"
 pymysql = "*"
 scrapy = "==1.5.1"
+scrapy-redis = "*"
 
 [requires]
 python_version = "3.7"

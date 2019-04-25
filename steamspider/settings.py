@@ -101,8 +101,7 @@ SCHEDULER = "scrapy_redis.scheduler.Scheduler"      #启用redis的调度器
 SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.PriorityQueue'
 
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"      #redis去重
-
-REDIS_URL = 'redis://:Liseen315song@127.0.0.1:6379'         #redis本地url
+REDIS_URL = 'redis://:@127.0.0.1:6379'         #redis本地url
 
 SCHEDULER_PERSIST = True
 

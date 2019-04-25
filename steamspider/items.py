@@ -9,7 +9,8 @@ import scrapy
 from peewee import *
 from datetime import datetime
 
-db = MySQLDatabase("steam_spiders", host='127.0.0.1', port=3306, user='root', passwd='Liseen315song', charset='utf8mb4')
+# 测试环境的数据库 上线的时候需要改成正式的密码跟地址
+db = MySQLDatabase("steam_vgfuns", host='127.0.0.1', port=3306, user='root', passwd='Liseen315song', charset='utf8mb4')
 
 
 class TagsItem(scrapy.Item):
