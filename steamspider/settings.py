@@ -103,6 +103,10 @@ SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.PriorityQueue'
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"      #redis去重
 REDIS_URL = 'redis://:@127.0.0.1:6379'         #redis本地url
 
+REDIS_PARAMS  = {}
+# Use custom redis client class.
+REDIS_PARAMS['db'] = '2'
+
 SCHEDULER_PERSIST = True
 
 SCHEDULER_FLUSH_ON_START = True
